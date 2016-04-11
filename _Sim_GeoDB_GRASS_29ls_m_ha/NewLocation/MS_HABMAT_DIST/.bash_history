@@ -1,0 +1,5 @@
+r.what --v -f -n input=simulation_000001_p029_h059_HABMAT_DIST@MS_HABMAT_DIST east_north=380.678643,193.660679
+r.colors map=simulation_000001_p029_h059_HABMAT@MS_HABMAT file=E:\Documentos_ber\UNESP\biodim\SGDB_simuladas_v05_29ls_m_ha/NewLocation/MS_HABMAT_DIST/.tmp/unknown/9372.0
+r.colors map=simulation_000001_p029_h059_HABMAT@MS_HABMAT file=E:\Documentos_ber\UNESP\biodim\SGDB_simuladas_v05_29ls_m_ha/NewLocation/MS_HABMAT_DIST/.tmp/unknown/9372.0 rules=E:\Documentos_ber\UNESP\biodim\SGDB_simuladas_v05_29ls_m_ha/NewLocation/MS_HABMAT_DIST/.tmp/unknown/9372.1
+r.colors map=simulation_000001_p029_h059_HABMAT@MS_HABMAT file=E:\Documentos_ber\UNESP\biodim\SGDB_simuladas_v05_29ls_m_ha/NewLocation/MS_HABMAT_DIST/.tmp/unknown/9372.0 rules=E:\Documentos_ber\UNESP\biodim\SGDB_simuladas_v05_29ls_m_ha/NewLocation/MS_HABMAT_DIST/.tmp/unknown/9372.1
+r.colors map=simulation_000001_p029_h059_HABMAT@MS_HABMAT file=E:\Documentos_ber\UNESP\biodim\SGDB_simuladas_v05_29ls_m_ha/NewLocation/MS_HABMAT_DIST/.tmp/unknown/9372.0
