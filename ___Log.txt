@@ -1,0 +1,25 @@
+JANEIRO 2014
+
+Danilo Boscolo <danilo.boscolo@gmail.com>,
+Milene Eigenheer <mileneaae@gmail.com>,
+Leonardo Stabile <leostabile@gmail.com>,
+John Wesley Ribeiro <jw.ribeiro.rc@gmail.com>,
+Bernardo Niebuhr <bernardo_brandaum@yahoo.com.br>,
+martensen@terra.com.br,
+miltinho.astronauta@gmail.com,
+mokross@yahoo.com,
+
+
+
+Foram feito ajustes para se adequar à nova versão do GRASS 6.4.3
+Tudo foi feito na versao 105; embora tenhamos a versao 111 
+
+1) Não estamos utilizando rpy2
+2) A função export_raster_from_grass foi remodelada
+3) Não pode escrever de criar uma pasta "moves" dentro do landpy
+
+
+TO DO LIST
+0) Manuscrito do BioDIM
+1) QGIS rodando no mesmo BD
+2) 

@@ -1,0 +1,5 @@
+Load GRASS GIS DataBase
+
+cd ""
+
+python landscape_v0105b-temp.py
