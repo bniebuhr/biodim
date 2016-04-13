@@ -159,7 +159,7 @@ def export_raster_from_grass_userbase(landscape_grassname_habmat, landscape_gras
     # devemos usar os mapas complete ?
     
     if exportPNG:
-        grass.run_command('r.colors.stddev', input=landscape_grassname_habdist+'@userbase')
+        grass.run_command('r.colors.stddev', map=landscape_grassname_habdist+'@userbase')
         grass.run_command('r.out.png', input=landscape_grassname_habdist+'@userbase', output='random_landscape_habdist.png', overwrite = True)
         ##---------------------------------
         grass.run_command('r.out.png', input=landscape_grassname_habmat_pid+'@userbase', output='random_landscape_habmat_pid.png', overwrite = True)

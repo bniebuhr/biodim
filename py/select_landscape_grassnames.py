@@ -1,5 +1,6 @@
 import random
 import re
+import os
 
 def select_landscape_grassnames():
     '''This part read HABMAT file list and return the grassname

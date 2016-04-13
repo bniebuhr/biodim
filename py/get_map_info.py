@@ -17,14 +17,16 @@ def map_info(landscape):
     - res_y: resolution/grain (size of the pixel), in the south-north direction
     '''
     
+    #landscape='lndscp_0002_Mapa0002_tif_HABMAT_HABMAT'
+    grass.run_command('g.region', raster=landscape)
     info = grass.parse_command('r.info', map=landscape, flags='g')
     
     # aqui deveriamos checar se a resolucao eh inteira... como fazer isso?
     dim = [int(info['rows']), int(info['cols'])]
-    x_west = int(info['west'])
-    x_east = int(info['east'])
-    y_south = int(info['south'])
-    y_north = int(info['north'])
+    x_west = int(float(info['west']))
+    x_east = int(float(info['east']))
+    y_south = int(float(info['south']))
+    y_north = int(float(info['north']))
     res_x = int(info['ewres'])
     res_y = int(info['nsres'])
     
