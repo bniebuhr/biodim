@@ -32,6 +32,7 @@ ID_ABOUT=101
 ID_IBMCFG=102
 ID_EXIT=110
 
+UserBaseMap=False
 
 #---------------------------------------------------
 # Auxiliary modules
@@ -98,7 +99,7 @@ from reset_isdispersing import reset_isdispersing   # leads with spatial resolut
 #---------------------------------------------------
 from mortality import get_safetyness_mortality, kill_individual_new # leads with spatial resolution - PIXELS AND DISTANCE
 #---------------------------------------------------
-def estimate_movement_cost(tab_safetyness, landscape_matrix, species_profile, aux_xy, include_habitatquality, distfromedge, spatialresolution):
+def estimate_movement_cost(tab_safetyness, landscape_matrix, species_profile, aux_xy, include_habitatquality, landscape_hqmqlq_quality, distfromedge, spatialresolution):
     protecdness = get_safetyness_mortality(tab_in=tab_safetyness, species_profile=species_profile, distMeters=distfromedge, spatialresolution=spatialresolution)
     
     aux=[aux_xy]
@@ -109,7 +110,7 @@ def estimate_movement_cost(tab_safetyness, landscape_matrix, species_profile, au
     col=int(XX)
     
     if include_habitatquality == "HabitatQuality_YES":
-        habqualyOnPosition=Form1.landscape_hqmqlq_quality[row][col]
+        habqualyOnPosition=landscape_hqmqlq_quality[row][col]
     else:
         habqualyOnPosition=1.0
 
@@ -393,7 +394,7 @@ class Form1(wx.Panel):
         
         Form1.biodim_version = 'BioDIM v. 1.05b.1'
         #------------------------------------------------
-        Form1.UserBaseMap=False
+        Form1.UserBaseMap=UserBaseMap
         
         Form1.defaultDIR = os.getcwd()
         Form1.tempDir='../temp'
@@ -410,6 +411,8 @@ class Form1(wx.Panel):
         Form1.include_probdeath=0
         Form1.exportPNG=True
         
+        Form1.startpop_always_K=0 # Option for using start population size always at the carrying capacity K
+        
         # Mortality parameters - in the future we will not need that anymore...
         os.chdir(Form1.defaultDIR)
         os.chdir(Form1.inputDir)
@@ -419,15 +422,15 @@ class Form1(wx.Panel):
         
         # Output parameters
         Form1.output_store_ongoingsteps_indiv=1
-        Form1.output_store_ongoingsteps_landscape=1
-        Form1.output_store_summary_indiv=1
-        Form1.output_store_summary_landscape=1
+        Form1.output_store_ongoingsteps_landscape=0
+        Form1.output_store_summary_indiv=0
+        Form1.output_store_summary_landscape=0
         
         self.speciesList = ['Random walk','Core dependent','Frag. dependent', 'Habitat dependent', 'Moderately generalist', 'Highly generalist']
 
         Form1.species_profile=self.speciesList[3]
         
-        Form1.start_popsize=5
+        Form1.start_popsize=50
         Form1.numberruns=100
         Form1.timesteps=200
         #***********************************************
@@ -482,7 +485,9 @@ class Form1(wx.Panel):
         #-------------------------------------------------
         # Initializing GUI
         
-        self.quote = wx.StaticText(self, id=-1, label=Form1.biodim_version+" - landscape genetic embedded", pos=wx.Point(20, 30))
+        Form1.showlandscape_size = 500 # number of pixels of the landscape shown        
+        
+        self.quote = wx.StaticText(self, id=-1, label=Form1.biodim_version+" - landscape genetic embedded", pos=wx.Point(20, 20))
         
         font = wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD)
         self.quote.SetForegroundColour("blue")
@@ -506,14 +511,11 @@ class Form1(wx.Panel):
         # Map information - in principle res_x and res_y are equal - we can ignore res_y
         Form1.mapdims, Form1.x_west, Form1.x_east, Form1.y_south, Form1.y_north, Form1.spatialresolution, res_y = map_info(landscape=Form1.landscape_grassname_habmat)        
         
-        # Initial population size
-        Form1.start_popsize=estimate_start_popsize(Form1.landscape_matrix, pland, Form1.homerangesize, Form1.spatialresolution)
-        
         # ------------------------
-        # Initializing GUI
-
+        # Conitnue initializing GUI
+        
         # A multiline TextCtrl - This is here to show how the events work in this program, don't pay too much attention to it
-        self.logger = wx.TextCtrl(self,5, "",wx.Point(20,380), wx.Size(320,100),wx.TE_MULTILINE | wx.TE_READONLY)
+        self.logger = wx.TextCtrl(self,5, "", wx.Point(20,380), wx.Size(320,100),wx.TE_MULTILINE | wx.TE_READONLY)
         
         # A button
         self.button =wx.Button(self, 10, "START SIMULATION", wx.Point(10, 500))
@@ -540,8 +542,18 @@ class Form1(wx.Panel):
             
         imageFile=Form1.background_filename[0]
         im1 = Image.open(imageFile)
-        jpg1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+        jpg1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).Scale(Form1.showlandscape_size,Form1.showlandscape_size).ConvertToBitmap()
         wx.StaticBitmap(self, -1, jpg1, (450,30), (jpg1.GetWidth(), jpg1.GetHeight()), style=wx.SIMPLE_BORDER)
+        
+        ##------------ LEEClab_logo
+        #setinput
+        os.chdir(Form1.defaultDIR)
+        os.chdir(Form1.auxDir) # os logos estao na pasta input
+        imageFile = 'LEEC_logo_abrev_f1_2cm.png'
+        im1 = Image.open(imageFile)
+        jpg1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).Scale(60,40).ConvertToBitmap()
+        wx.StaticBitmap(self, -1, jpg1, (20,70), (jpg1.GetWidth(), jpg1.GetHeight()), style=wx.NO_BORDER)        
+        #wx.StaticBitmap(self, -1, jpg1, (20,60), (jpg1.GetWidth(), jpg1.GetHeight()), style=wx.SUNKEN_BORDER)        
         
         ##------------ LElab_logo
         #setinput
@@ -549,67 +561,110 @@ class Form1(wx.Panel):
         os.chdir(Form1.auxDir) # os logos estao na pasta input
         imageFile = 'LeLab05.gif'
         im1 = Image.open(imageFile)
-        jpg1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
-        wx.StaticBitmap(self, -1, jpg1, (180,205), (jpg1.GetWidth(), jpg1.GetHeight()), style=wx.SUNKEN_BORDER)
+        jpg1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).Scale(60,60).ConvertToBitmap()
+        wx.StaticBitmap(self, -1, jpg1, (85,60), (jpg1.GetWidth(), jpg1.GetHeight()), style=wx.NO_BORDER)
+        #wx.StaticBitmap(self, -1, jpg1, (85,60), (jpg1.GetWidth(), jpg1.GetHeight()), style=wx.SUNKEN_BORDER)
         
         # the edit control - one line version.
-        self.lblname = wx.StaticText(self, -1, "Output file name :",wx.Point(20,60))
-        self.editname = wx.TextCtrl(self, 20, Form1.output_prefix, wx.Point(150, 60), wx.Size(140,-1))
+        
+        # Output options
+        self.lblname = wx.StaticText(self, -1, "Output file name:",wx.Point(160,60))
+        self.editname = wx.TextCtrl(self, 20, Form1.output_prefix, wx.Point(250, 55), wx.Size(140,-1))
         wx.EVT_TEXT(self, 20, self.EvtText)
         wx.EVT_CHAR(self.editname, self.EvtChar)
         
-        Form1.lblstart_popsize = wx.StaticText(self, -1, "Pop Size :",wx.Point(20,120))
-        Form1.edtstart_popsize = wx.TextCtrl(self, 30, str(Form1.start_popsize), wx.Point(82, 120), wx.Size(35,-1))
+        self.lblname2 = wx.StaticText(self, -1, "Output options:", wx.Point(160,80))
+        
+        # Population parameters
+        self.lblname3 = wx.StaticText(self, -1, "Population parameters:", wx.Point(20,135))
+        
+        Form1.lblstart_popsize = wx.StaticText(self, -1, "Pop Size:",wx.Point(20,160))
+        Form1.edtstart_popsize = wx.TextCtrl(self, 30, str(Form1.start_popsize), wx.Point(70, 155), wx.Size(35,-1))
         wx.EVT_TEXT(self, 30, self.EvtText)
         wx.EVT_CHAR(Form1.edtstart_popsize, self.EvtChar)
         
-        Form1.lblavg_movement_dist_meters = wx.StaticText(self, -1, "Avg.Step.Length(m):",wx.Point(125,120))
-        Form1.edtavg_movement_dist_meters = wx.TextCtrl(self, 80, str(Form1.avg_movement_dist_meters), wx.Point(195, 120), wx.Size(30,-1))
+        Form1.lblindiv_agemean = wx.StaticText(self, -1, "Avg. age:", wx.Point(20,185))
+        Form1.edtindiv_agemean = wx.TextCtrl(self, 31, str(Form1.indiv_agemean), wx.Point(70, 180), wx.Size(35,-1))
+        wx.EVT_TEXT(self, 31, self.EvtText)
+        wx.EVT_CHAR(Form1.edtindiv_agemean, self.EvtChar)
+        
+        Form1.lblindiv_agestd = wx.StaticText(self, -1, "SD age:", wx.Point(115,185))
+        Form1.edtindiv_agestd = wx.TextCtrl(self, 32, str(Form1.indiv_agestd), wx.Point(155, 180), wx.Size(35,-1))
+        wx.EVT_TEXT(self, 32, self.EvtText)
+        wx.EVT_CHAR(Form1.edtindiv_agestd, self.EvtChar)         
+        
+        Form1.lblindiv_female_rate = wx.StaticText(self, -1, "Proportion of females:", wx.Point(195,185))
+        Form1.edtindiv_female_rate = wx.TextCtrl(self, 33, str(Form1.indiv_female_rate), wx.Point(305, 180), wx.Size(35,-1))
+        wx.EVT_TEXT(self, 33, self.EvtText)
+        wx.EVT_CHAR(Form1.edtindiv_female_rate, self.EvtChar)                
+        
+        # Movement parameters
+        self.lblname4 = wx.StaticText(self, -1, "Ecological profile:", wx.Point(20,210))
+        
+        Form1.lblhomerangesize = wx.StaticText(self, -1, "HRange (ha):",wx.Point(235,235))
+        Form1.edthomerangesize = wx.TextCtrl(self, 60, str(Form1.homerangesize), wx.Point(305, 230), wx.Size(35,-1))
+        wx.EVT_TEXT(self, 60, self.EvtText)
+        wx.EVT_CHAR(Form1.edthomerangesize, self.EvtChar)        
+        
+        Form1.lblavg_movement_dist_meters = wx.StaticText(self, -1, "Avg. Step Length (m):",wx.Point(20,260))
+        Form1.edtavg_movement_dist_meters = wx.TextCtrl(self, 80, str(Form1.avg_movement_dist_meters), wx.Point(125, 255), wx.Size(30,-1))
         wx.EVT_TEXT(self, 80, self.EvtText)
         wx.EVT_CHAR(Form1.edtavg_movement_dist_meters, self.EvtChar)
         
-        Form1.lblwhen_dispersing_distance_factor = wx.StaticText(self, -1, "Dispers.Fact:",wx.Point(125,150))
-        Form1.edtwhen_dispersing_distance_factor = wx.TextCtrl(self, 81, str(Form1.when_dispersing_distance_factor), wx.Point(195, 150), wx.Size(30,-1))
+        Form1.lblwhen_dispersing_distance_factor = wx.StaticText(self, -1, "Dispersal Factor:",wx.Point(170,260))
+        Form1.edtwhen_dispersing_distance_factor = wx.TextCtrl(self, 81, str(Form1.when_dispersing_distance_factor), wx.Point(260, 255), wx.Size(30,-1))
         wx.EVT_TEXT(self, 81, self.EvtText)
         wx.EVT_CHAR(Form1.edtwhen_dispersing_distance_factor, self.EvtChar)
         
-        Form1.lblnumberruns = wx.StaticText(self, -1, "N. of Runs :",wx.Point(235,120))
-        Form1.edtnumberruns = wx.TextCtrl(self, 50, str(Form1.numberruns), wx.Point(305, 120), wx.Size(35,-1))
+        Form1.lblnumberruns = wx.StaticText(self, -1, "N. of Runs:",wx.Point(120,300))
+        Form1.edtnumberruns = wx.TextCtrl(self, 50, str(Form1.numberruns), wx.Point(180, 295), wx.Size(35,-1))
         wx.EVT_TEXT(self, 50, self.EvtText)
         wx.EVT_CHAR(Form1.edtnumberruns, self.EvtChar)
         
-        Form1.lbltimesteps = wx.StaticText(self, -1, "Time Steps :",wx.Point(20,150))
-        Form1.edttimesteps = wx.TextCtrl(self, 40, str(Form1.timesteps), wx.Point(82, 150), wx.Size(35,-1))
+        Form1.lbltimesteps = wx.StaticText(self, -1, "Time Steps:",wx.Point(20,300))
+        Form1.edttimesteps = wx.TextCtrl(self, 40, str(Form1.timesteps), wx.Point(82, 295), wx.Size(35,-1))
         wx.EVT_TEXT(self, 40, self.EvtText)
         wx.EVT_CHAR(Form1.edttimesteps, self.EvtChar)
 
-        Form1.lblhomerangesize = wx.StaticText(self, -1, "HRange(ha) :",wx.Point(235,150))
-        Form1.edthomerangesize = wx.TextCtrl(self, 60, str(Form1.homerangesize), wx.Point(305, 150), wx.Size(35,-1))
-        wx.EVT_TEXT(self, 60, self.EvtText)
-        wx.EVT_CHAR(Form1.edthomerangesize, self.EvtChar)
-
-        Form1.lblindivpixels = wx.StaticText(self, -1, "Indiv.Size (pix):",wx.Point(225,90))
-        Form1.edtindivpixels = wx.TextCtrl(self, 70, str(Form1.indivpixels_whenmoving), wx.Point(305, 90), wx.Size(35,-1))
+        Form1.lblindivpixels = wx.StaticText(self, -1, "Indiv.Size (pix):",wx.Point(225,300))
+        Form1.edtindivpixels = wx.TextCtrl(self, 70, str(Form1.indivpixels_whenmoving), wx.Point(305, 295), wx.Size(35,-1))
         wx.EVT_TEXT(self, 70, self.EvtText)
         wx.EVT_CHAR(Form1.edtindivpixels, self.EvtChar)
         
         # the combobox Control
 
-        self.lblspeciesList = wx.StaticText(self,-1,"Species Profile:",wx.Point(20, 90))
-        self.editspeciesList=wx.ComboBox(self, 93, Form1.species_profile, wx.Point(100, 90), wx.Size(120, -1),
+        self.lblspeciesList = wx.StaticText(self,-1,"Species Profile:",wx.Point(20, 235))
+        self.editspeciesList=wx.ComboBox(self, 93, Form1.species_profile, wx.Point(100, 230), wx.Size(120, -1),
         self.speciesList, wx.CB_DROPDOWN)
         wx.EVT_COMBOBOX(self, 93, self.EvtComboBox)
         wx.EVT_TEXT(self, 93, self.EvtText)
         
         # Checkbox
-        self.insure = wx.CheckBox(self, 91, "Habitat quality on model",wx.Point(20,180))
+        self.insure = wx.CheckBox(self, 61, "Individual-step",wx.Point(160,100))
+        wx.EVT_CHECKBOX(self, 61,   self.EvtCheckBox)   
+        
+        self.insure = wx.CheckBox(self, 62, "Individual-summary",wx.Point(160,120))
+        wx.EVT_CHECKBOX(self, 62,   self.EvtCheckBox)
+
+        self.insure = wx.CheckBox(self, 63, "Landscape-step",wx.Point(270,100))
+        wx.EVT_CHECKBOX(self, 63,   self.EvtCheckBox)   
+                
+        self.insure = wx.CheckBox(self, 64, "Landscape-summary",wx.Point(270,120))
+        wx.EVT_CHECKBOX(self, 64,   self.EvtCheckBox)  
+        
+        self.insure = wx.CheckBox(self, 71, "Pop. always at carrying capacity", wx.Point(110,160))
+        wx.EVT_CHECKBOX(self, 71,   self.EvtCheckBox)
+        
+        self.insure = wx.CheckBox(self, 95, "Include mortality",wx.Point(285,160))
+        wx.EVT_CHECKBOX(self, 95,   self.EvtCheckBox)             
+        
+        self.insure = wx.CheckBox(self, 91, "Habitat quality on model",wx.Point(20,330))
         wx.EVT_CHECKBOX(self, 91,   self.EvtCheckBox)
 
-        self.insure = wx.CheckBox(self, 94, "Plot movements",wx.Point(160,180))
+        self.insure = wx.CheckBox(self, 94, "Plot movements",wx.Point(160,330))
         wx.EVT_CHECKBOX(self, 94,   self.EvtCheckBox)
 
-        self.insure = wx.CheckBox(self, 95, "Prob.Death",wx.Point(260,180))
-        wx.EVT_CHECKBOX(self, 95,   self.EvtCheckBox)        
+        # COLOCAR UMA OPCAO PARA EXPORTAR O ASC DE CADA PAISAGEM COM O PREFIXO E NUM DA SIMULACAO TAMBEM...
         
         ##################################################
         # Isso nao eh usado em lugar algum!!!
@@ -621,8 +676,8 @@ class Form1(wx.Panel):
         #wx.EVT_RADIOBOX(self, 92, self.EvtRadioBox)
 
 
-    def EvtRadioBox(self, event):
-        self.logger.AppendText('Dispersive behaviour: %d\n' % (event.GetInt()+1))
+    #def EvtRadioBox(self, event):
+        #self.logger.AppendText('Dispersive behaviour: %d\n' % (event.GetInt()+1))
         
     def EvtComboBox(self, event):
         if event.GetId()==93:   #93==Species Profile Combo box
@@ -648,7 +703,7 @@ class Form1(wx.Panel):
             os.chdir(Form1.tempDir)
             imageFile=Form1.background_filename[0]
             im1 = Image.open(imageFile)
-            jpg1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+            jpg1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).Scale(Form1.showlandscape_size,Form1.showlandscape_size).ConvertToBitmap()
             wx.StaticBitmap(self, -1, jpg1, (450,30), (jpg1.GetWidth(), jpg1.GetHeight()), style=wx.SIMPLE_BORDER)
             self.Refresh()
             
@@ -683,7 +738,7 @@ class Form1(wx.Panel):
             imageFile=Form1.background_filename_start[0]
             #if Form1.plotmovements==1:
             im1 = Image.open(imageFile)
-            jpg1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+            jpg1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).Scale(Form1.showlandscape_size,Form1.showlandscape_size).ConvertToBitmap()
             wx.StaticBitmap(self, -1, jpg1, (450,30), (jpg1.GetWidth(), jpg1.GetHeight()), style=wx.SIMPLE_BORDER)
             
             Form1.background_filename=Form1.background_filename_start
@@ -718,6 +773,9 @@ class Form1(wx.Panel):
                     pland, forest=getForest_habmat(landscape_matrix = Form1.landscape_matrix)
                 else:
                     pland, forest=getForest(landscape_matrix = Form1.landscape_matrix)
+                    
+                if Form1.startpop_always_K:
+                    Form1.start_popsize = estimate_start_popsize(Form1.landscape_matrix, pland, Form1.homerangesize, Form1.spatialresolution)                
                 
                 indiv_xy = populate_random(forest, Form1.start_popsize) # rows and cols in which animals are initally
     
@@ -819,6 +877,8 @@ class Form1(wx.Panel):
                     else:
                         pass
                 
+                #-----------------------------------------------------------
+                # Testing errors on initial parameters
                 error=0
                 if Form1.timesteps<=0:
                     self.logger.AppendText("\n  ...... ??? Time steps=  %s\n" % Form1.timesteps)
@@ -876,6 +936,33 @@ class Form1(wx.Panel):
                     d.Destroy() # finally destroy it when finished.
                     error=1
                     
+                if Form1.indiv_agemean<=0:
+                    self.logger.AppendText("\n  ...... ??? Indiv. average age= %s" % str(Form1.indiv_agemean))
+                    d= wx.MessageDialog( self, " Error on Individual average age mean\n"
+                                         " try again", Form1.biodim_version+" (Landscape genetic embeded)", wx.OK)
+                    d.ShowModal() # Shows it
+                    d.Destroy() # finally destroy it when finished.
+                    error=1
+                    
+                if Form1.indiv_agestd<=0:
+                    self.logger.AppendText("\n  ...... ??? Indiv. SD age= %s" % str(Form1.indiv_agestd))
+                    d= wx.MessageDialog( self, " Error on Individual Standard Deviation age \n"
+                                         " try again", Form1.biodim_version+" (Landscape genetic embeded)", wx.OK)
+                    d.ShowModal() # Shows it
+                    d.Destroy() # finally destroy it when finished.
+                    error=1
+                    
+                if Form1.indiv_female_rate<=0:
+                    self.logger.AppendText("\n  ...... ??? Proportion of females = %s" % str(Form1.indiv_female_rate))
+                    d= wx.MessageDialog( self, " Error on Proportion of females \n"
+                                         " try again", Form1.biodim_version+" (Landscape genetic embeded)", wx.OK)
+                    d.ShowModal() # Shows it
+                    d.Destroy() # finally destroy it when finished.
+                    error=1 
+                #-----------------------------------------------------------
+                    
+                #-----------------------------------------------------------
+                # Initializing run
                 if error==0:
                     self.logger.AppendText("  [ %s ]\n" % Form1.landscape_grassname_habmat)
                     self.logger.AppendText("USING %s \n" % Form1.using)
@@ -944,7 +1031,7 @@ class Form1(wx.Panel):
 
                             if indiv_islive[num_of_indiv]==1:
                                 indiv_islive_timestep_waslive[num_of_indiv]=(actual_step+1)
-                                indiv_movementcost[num_of_indiv]+=estimate_movement_cost(Form1.tab_safetyness, Form1.landscape_matrix, Form1.species_profile, aux_xy=indiv_xy_position, include_habitatquality=Form1.include_habitatquality, distfromedge=indiv_distedge[num_of_indiv], spatialresolution=Form1.spatialresolution)
+                                indiv_movementcost[num_of_indiv]+=estimate_movement_cost(Form1.tab_safetyness, Form1.landscape_matrix, Form1.species_profile, aux_xy=indiv_xy_position, include_habitatquality=Form1.include_habitatquality, landscape_hqmqlq_quality=Form1.landscape_hqmqlq_quality, distfromedge=indiv_distedge[num_of_indiv], spatialresolution=Form1.spatialresolution)
                                 
                                 if Form1.include_probdeath==1:
                                     indiv_islive[num_of_indiv]=kill_individual_new(tab_mortality=Form1.tab_mortality, sp_profile=Form1.species_profile, distfromedge=indiv_distedge[num_of_indiv], spatialres=Form1.spatialresolution)
@@ -1005,7 +1092,7 @@ class Form1(wx.Panel):
                                 os.chdir(Form1.tempDir) # acho que essas chamadas terao que ser aqui mesmo
                                 imageFile=Form1.background_filename[0]
                                 im1 = Image.open(imageFile)
-                                jpg1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+                                jpg1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).Scale(Form1.showlandscape_size,Form1.showlandscape_size).ConvertToBitmap()
                                 wx.StaticBitmap(self, -1, jpg1, (450,30), (jpg1.GetWidth(), jpg1.GetHeight()), style=wx.SIMPLE_BORDER)
                         
                         control_isDispersingHistory.append(sum(indiv_isdispersing))
@@ -1074,6 +1161,9 @@ class Form1(wx.Panel):
                         Form1.landscape_hqmqlq_quality = [[1.0] * cols] * rows                        
                     else:
                         Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist,Form1.landscape_habmat_pid,Form1.landscape_habmat_areapix,Form1.landscape_hqmqlq_quality,Form1.landscape_hqmqlq_AREAqual,Form1.landscape_frag_pid,Form1.landscape_frag_AREApix,Form1.landscape_frag_AREAqual,Form1.landscape_dila01clean_pid,Form1.landscape_dila01clean_AREApix,Form1.landscape_dila01clean_AREAqual,Form1.landscape_dila02clean_pid,Form1.landscape_dila02clean_AREApix,Form1.landscape_dila02clean_AREAqual=pickup_one_landscape(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+                        
+                    # Map information - in principle res_x and res_y are equal - we can ignore res_y
+                    Form1.mapdims, Form1.x_west, Form1.x_east, Form1.y_south, Form1.y_north, Form1.spatialresolution, res_y = map_info(landscape=Form1.landscape_grassname_habmat)
                                        
                     if Form1.changehomerangesize==0: #not change
                         pass
@@ -1082,17 +1172,14 @@ class Form1(wx.Panel):
                     if Form1.changehomerangesize==2: #normal distribution
                         Form1.homerangesize=random.normalvariate(mu=Form1.changehomerangesize_P1,sigma=Form1.changehomerangesize_P2)
                     
-                    if Form1.UserBaseMap:
-                        pland, forest=getForest_habmat(landscape_matrix = Form1.landscape_matrix)
-                    else:
-                        pland, forest=getForest(landscape_matrix = Form1.landscape_matrix)
+                    # This lines are run in the beginning of each simulation
+                    #if Form1.UserBaseMap:
+                        #pland, forest=getForest_habmat(landscape_matrix = Form1.landscape_matrix)
+                    #else:
+                        #pland, forest=getForest(landscape_matrix = Form1.landscape_matrix)
                         
-                    # Map information - in principle res_x and res_y are equal - we can ignore res_y
-                    Form1.mapdims, Form1.x_west, Form1.x_east, Form1.y_south, Form1.y_north, Form1.spatialresolution, res_y = map_info(landscape=Form1.landscape_grassname_habmat)        
-                    
-                    #################################
-                    # temos la em cima que colocar a opcao de usar sempre a mesma pop inicial ou iniciar sempre com NPop = K
-                    Form1.start_popsize=estimate_start_popsize(Form1.landscape_matrix, pland, Form1.homerangesize, Form1.spatialresolution)                    
+                    #if Form1.startpop_always_K:
+                        #Form1.start_popsize=estimate_start_popsize(Form1.landscape_matrix, pland, Form1.homerangesize, Form1.spatialresolution)                    
                     
                     imageFile=Form1.background_filename[0]
                 
@@ -1105,7 +1192,7 @@ class Form1(wx.Panel):
                         
                     imageFile=Form1.background_filename[0]
                     im1 = Image.open(imageFile)
-                    jpg1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+                    jpg1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).Scale(Form1.showlandscape_size,Form1.showlandscape_size).ConvertToBitmap()
                     wx.StaticBitmap(self, -1, jpg1, (450,30), (jpg1.GetWidth(), jpg1.GetHeight()), style=wx.SIMPLE_BORDER)
                     
                     Form1.background_filename=Form1.background_filename_start
@@ -1153,26 +1240,27 @@ class Form1(wx.Panel):
             else:
                 Form1.numberruns=int(event.GetString())            
         if event.GetId()==60: #60=homerangesize
-            not_int=0
+            not_float=0
             try: 
-                int(event.GetString())
+                Form1.homerangesize=float(event.GetString())
             except ValueError:
-                not_int=1
+                Form1.homerangesize=0.0
                 
-            if not_int==1:
-                Form1.homerangesize=0
-            else:
-                Form1.homerangesize=int(event.GetString())
+            #if not_float==1:
+                #Form1.homerangesize=0
+            #else:
+                #Form1.homerangesize=float(event.GetString())
             
             if Form1.UserBaseMap:
                 pland, forest=getForest_habmat(landscape_matrix = Form1.landscape_matrix)
             else:
                 pland, forest=getForest(landscape_matrix = Form1.landscape_matrix)        
-                
-            Form1.start_popsize=estimate_start_popsize(Form1.landscape_matrix, pland, Form1.homerangesize, Form1.spatialresolution)                
+            
+            if Form1.startpop_always_K:    
+                Form1.start_popsize=estimate_start_popsize(Form1.landscape_matrix, pland, Form1.homerangesize, Form1.spatialresolution)                
 
-            Form1.lblstart_popsize = wx.StaticText(self, -1, str(Form1.start_popsize)+"  ",wx.Point(84,123))
-            self.logger.AppendText('New start popsize: %d\n' % Form1.start_popsize)
+                Form1.lblstart_popsize = wx.StaticText(self, -1, str(Form1.start_popsize)+"  ",wx.Point(75, 160))
+                self.logger.AppendText('New start popsize: %d\n' % Form1.start_popsize)
             
         if event.GetId()==70: #70=indivpixels
             not_int=0
@@ -1234,10 +1322,46 @@ class Form1(wx.Panel):
             else:
                 Form1.include_probdeath=0
             self.logger.AppendText('   Include Prob.of.Death: %s\n' % str(Form1.include_probdeath))
+            
+        if event.GetId()==61: #Form1.output_store_ongoingsteps_indiv
+            if event.Checked()==1:
+                Form1.output_store_ongoingsteps_indiv=1
+            else:
+                Form1.output_store_ongoingsteps_indiv=0
+            self.logger.AppendText(' Record individual information step-to-step: %s\n' % str(Form1.output_store_ongoingsteps_indiv))
+        
+        if event.GetId()==62: #Form1.output_store_summary_indiv
+            if event.Checked()==1:
+                Form1.output_store_summary_indiv=1
+            else:
+                Form1.output_store_summary_indiv=0
+            self.logger.AppendText(' Record individual summary in the end of a simulation: %s\n' % Form1.output_store_summary_indiv)
 
+
+        if event.GetId()==63: #Form1.output_store_ongoingsteps_landscape
+            if event.Checked()==1:
+                Form1.output_store_ongoingsteps_landscape=1
+            else:
+                Form1.output_store_ongoingsteps_landscape=0
+            self.logger.AppendText(' Record landscape information step-to-step: %s\n' % Form1.output_store_ongoingsteps_landscape)
+        
+        if event.GetId()==64: #Form1.output_store_summary_landscape
+            if event.Checked()==1:
+                Form1.output_store_summary_landscape=1
+            else:
+                Form1.output_store_summary_landscape=0
+            self.logger.AppendText(' Record landscape summary in the end of a simulation: %s\n' % Form1.output_store_summary_landscape)
+        
+        if event.GetId()==71: #Form1.startpop_always_K 
+            if event.Checked()==1:
+                Form1.startpop_always_K = 1
+            else:
+                Form1.startpop_always_K = 0
+            self.logger.AppendText(' Start population size always at the carrying capacity (N=K): %s\n' % str(Form1.startpop_always_K))               
+                
             
     def OnExit(self, event):
-        d= wx.MessageDialog( self, " Thanks for simulating \n "+
+        d= wx.MessageDialog(self, " Thanks for simulating using \n "+
                             Form1.biodim_version+" (Landscape genetic embeded)","Good bye", wx.OK)
                             # Create a message dialog box
         d.ShowModal() # Shows it
@@ -1248,6 +1372,17 @@ class Form1(wx.Panel):
 #----------------------------------------------------------------------
 # Initializing the software
 if __name__ == "__main__":
+    while 1:
+        realmap = raw_input("Are you going to use the Simulated GRASS Geo DataBase? (y/n)")
+        if realmap == 'Y' or realmap == 'y' or realmap == 'N' or realmap == 'n':
+            if realmap == 'Y' or realmap == 'y':
+                UserBaseMap = False
+            else:
+                UserBaseMap = True
+            break
+        else:
+            print 'You should type y or n' 
+    
     app = wx.PySimpleApp()
     frame = wx.Frame(None, -1, "BioDIM v. 1.05b.1 - Biologically scalled DIspersal Model - LANDSCAPE GENETIC EMBEDDED - LeLab/LEEC - Mar2016", size=(1000,600))
     Form1(frame,-1)
