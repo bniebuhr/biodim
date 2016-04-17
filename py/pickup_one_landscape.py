@@ -2,7 +2,7 @@ from select_landscape_grassnames import *
 from export_raster_from_grass import *
 from read_landscape_head_ascii_standard import read_landscape_head_ascii_standard
 
-def pickup_one_landscape(defaultDir, inputDir, tempDir, userbasemap = False, exportPNG = True):
+def pickup_one_landscape(defaultDir, inputDir, tempDir, select_form = 'random', previous_landscape = '', userbasemap = False, exportPNG = True):
     '''
     This function select one random landscape from the Spatial Data Base (if userbasemap = False)
     or from the User Defined Data Base, export ascii and png files for each of them,
@@ -19,7 +19,7 @@ def pickup_one_landscape(defaultDir, inputDir, tempDir, userbasemap = False, exp
     if userbasemap: 
         os.chdir(defaultDir)
         os.chdir(inputDir)
-        landscape_grassname_habmat, landscape_grassname_habdist, landscape_grassname_habmat_pid, landscape_grassname_habmat_areapix, landscape_grassname_frag_pid, landscape_grassname_frag_AREApix, landscape_grassname_dila01clean_pid, landscape_grassname_dila01clean_AREApix, landscape_grassname_dila02clean_pid, landscape_grassname_dila02clean_AREApix=select_landscape_grassnames_userbase()
+        landscape_grassname_habmat, landscape_grassname_habdist, landscape_grassname_habmat_pid, landscape_grassname_habmat_areapix, landscape_grassname_frag_pid, landscape_grassname_frag_AREApix, landscape_grassname_dila01clean_pid, landscape_grassname_dila01clean_AREApix, landscape_grassname_dila02clean_pid, landscape_grassname_dila02clean_AREApix=select_landscape_grassnames_userbase(select_form=select_form, previous_landscape=previous_landscape)
                 
         export_raster_from_grass_userbase(landscape_grassname_habmat, landscape_grassname_habdist, landscape_grassname_habmat_pid, landscape_grassname_habmat_areapix, landscape_grassname_frag_pid, landscape_grassname_frag_AREApix, landscape_grassname_dila01clean_pid, landscape_grassname_dila01clean_AREApix, landscape_grassname_dila02clean_pid, landscape_grassname_dila02clean_AREApix, defaultDir, inputDir, tempDir, exportPNG=exportPNG)
         
@@ -49,7 +49,7 @@ def pickup_one_landscape(defaultDir, inputDir, tempDir, userbasemap = False, exp
     else:
         os.chdir(defaultDir)
         os.chdir(inputDir)        
-        landscape_grassname_habmat, landscape_grassname_hqmqlq, landscape_grassname_habdist, landscape_grassname_habmat_pid, landscape_grassname_habmat_areapix, landscape_grassname_hqmqlq_quality, landscape_grassname_hqmqlq_AREAqual, landscape_grassname_frag_pid, landscape_grassname_frag_AREApix,landscape_grassname_frag_AREAqual,landscape_grassname_dila01clean_pid,landscape_grassname_dila01clean_AREApix,landscape_grassname_dila01clean_AREAqual,landscape_grassname_dila02clean_pid,landscape_grassname_dila02clean_AREApix,landscape_grassname_dila02clean_AREAqual=select_landscape_grassnames()
+        landscape_grassname_habmat, landscape_grassname_hqmqlq, landscape_grassname_habdist, landscape_grassname_habmat_pid, landscape_grassname_habmat_areapix, landscape_grassname_hqmqlq_quality, landscape_grassname_hqmqlq_AREAqual, landscape_grassname_frag_pid, landscape_grassname_frag_AREApix,landscape_grassname_frag_AREAqual,landscape_grassname_dila01clean_pid,landscape_grassname_dila01clean_AREApix,landscape_grassname_dila01clean_AREAqual,landscape_grassname_dila02clean_pid,landscape_grassname_dila02clean_AREApix,landscape_grassname_dila02clean_AREAqual=select_landscape_grassnames(select_form=select_form, previous_landscape=previous_landscape)
      
         export_raster_from_grass(landscape_grassname_habmat, landscape_grassname_hqmqlq, landscape_grassname_habdist, landscape_grassname_habmat_pid, landscape_grassname_habmat_areapix, landscape_grassname_hqmqlq_quality, landscape_grassname_hqmqlq_AREAqual, landscape_grassname_frag_pid, landscape_grassname_frag_AREApix, landscape_grassname_frag_AREAqual, landscape_grassname_dila01clean_pid, landscape_grassname_dila01clean_AREApix, landscape_grassname_dila01clean_AREAqual, landscape_grassname_dila02clean_pid, landscape_grassname_dila02clean_AREApix, landscape_grassname_dila02clean_AREAqual, defaultDir, inputDir, tempDir, exportPNG=exportPNG)
     

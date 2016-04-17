@@ -51,8 +51,8 @@ def plot_walk(landscape_matrix, indiv_xy, aux_isdispersing, aux_islive, nruns, a
                     xp=(len(landscape_matrix)-1)
                 if xp<0:
                     xp=0
-                if yp>(len(landscape_matrix)-1):
-                    yp=(len(landscape_matrix)-1)
+                if yp>(len(landscape_matrix[0])-1):
+                    yp=(len(landscape_matrix[0])-1)
                 if yp<0:
                     yp=0
                 num_of_indiv_color=num_of_indiv

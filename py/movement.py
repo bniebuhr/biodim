@@ -70,7 +70,7 @@ def OnHabitat(landscape_habdist, landscape_frag_pid, species_profile, listpositi
         distfromedge = landscape_habdist[row][col]
         # the line below is to differentiate between habitat and fragment dependent
         # if frag_id > 0, it is habitat for fragment dependent species
-        frag_pid = identify_patchid([XX, YY], patchid_map=landscape_frag_pid)
+        frag_pid = identify_patchid(aux[position], patchid_map=landscape_frag_pid)
 
         ##'Random walk','Core dependent','Frag. dependent', 'Habitat dependent', 'Moderately generalist'
         

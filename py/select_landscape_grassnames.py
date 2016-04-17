@@ -2,7 +2,7 @@ import random
 import re
 import os
 
-def select_landscape_grassnames():
+def select_landscape_grassnames(select_form = 'random', previous_landscape = ''):
     '''This part read HABMAT file list and return the grassname
        for HABMAT, as well as the index for landscape matrix.
        After also return other grassnames to use used on simulations
@@ -12,7 +12,19 @@ def select_landscape_grassnames():
     file_habmat=open("simulados_HABMAT.txt","r")
     habmat=file_habmat.readlines()
     file_habmat.close()
-    landscape_grassname_habmat=random.sample(habmat, 1)[0].replace("\n","")
+    if select_form == 'random':
+        if previous_landscape == '':
+            landscape_grassname_habmat=habmat[0].replace("\n","")
+        else:
+            landscape_grassname_habmat=random.sample(habmat, 1)[0].replace("\n","")
+    elif select_form == 'order':              
+        if previous_landscape == '' or previous_landscape == habmat[(len(habmat)-1)].replace("\n",""):
+            landscape_grassname_habmat=habmat[0].replace("\n","")
+        else:
+            index = habmat.index(previous_landscape+'\n')
+            landscape_grassname_habmat=habmat[(index+1)].replace("\n","")
+    elif select_form == 'type':
+        landscape_grassname_habmat=previous_landscape
     landscape_index=landscape_grassname_habmat[11:17]
     
     
@@ -140,7 +152,7 @@ def select_landscape_grassnames():
     return landscape_grassname_habmat, landscape_grassname_hqmqlq, landscape_grassname_habdist, landscape_grassname_habmat_pid, landscape_grassname_habmat_areapix, landscape_grassname_hqmqlq_quality, landscape_grassname_hqmqlq_AREAqual, landscape_grassname_frag_pid, landscape_grassname_frag_AREApix, landscape_grassname_frag_AREAqual, landscape_grassname_dila01clean_pid, landscape_grassname_dila01clean_AREApix, landscape_grassname_dila01clean_AREAqual, landscape_grassname_dila02clean_pid, landscape_grassname_dila02clean_AREApix, landscape_grassname_dila02clean_AREAqual
 
 
-def select_landscape_grassnames_userbase():
+def select_landscape_grassnames_userbase(select_form = 'random', previous_landscape = ''):
     '''This part read HABMAT file list and return the grassname
        for HABMAT, as well as the index for landscape matrix.
        After also return other grassnames to use used on simulations
@@ -150,7 +162,19 @@ def select_landscape_grassnames_userbase():
     file_habmat=open("simulados_HABMAT.txt","r")
     habmat=file_habmat.readlines()
     file_habmat.close()
-    landscape_grassname_habmat=random.sample(habmat, 1)[0].replace("\n","")
+    if select_form == 'random':
+        if previous_landscape == '':
+            landscape_grassname_habmat=habmat[0].replace("\n","")
+        else:
+            landscape_grassname_habmat=random.sample(habmat, 1)[0].replace("\n","")
+    elif select_form == 'order':              
+        if previous_landscape == '' or previous_landscape == habmat[(len(habmat)-1)].replace("\n",""):
+            landscape_grassname_habmat=habmat[0].replace("\n","")
+        else:
+            index = habmat.index(previous_landscape+'\n')
+            landscape_grassname_habmat=habmat[(index+1)].replace("\n","")
+    elif select_form == 'type':
+        landscape_grassname_habmat=previous_landscape    
     landscape_index=landscape_grassname_habmat[0:11]
     
     #.... return grassname for HABDIST (Distance from EDGE of habitat)
