@@ -48,7 +48,7 @@ def get_listofposition(landscape_matrix, modified_indiv_xy_startpos, avg_movemen
     return listofpositions
 
 #----------------------------------------------------------------------
-def OnHabitat(landscape_habdist, landscape_frag_pid, species_profile, listposition): # leads with spatial resolution - PIXELS AND DISTANCE
+def OnHabitat(landscape_habdist, species_profile, listposition, landscape_frag_pid = ''): # leads with spatial resolution - PIXELS AND DISTANCE
     '''
     This function...
     '''
@@ -70,7 +70,10 @@ def OnHabitat(landscape_habdist, landscape_frag_pid, species_profile, listpositi
         distfromedge = landscape_habdist[row][col]
         # the line below is to differentiate between habitat and fragment dependent
         # if frag_id > 0, it is habitat for fragment dependent species
-        frag_pid = identify_patchid(aux[position], patchid_map=landscape_frag_pid)
+        if species_profile == "Frag. dependent":
+            frag_pid = identify_patchid(aux[position], patchid_map=landscape_frag_pid)
+        else:
+            frag_pid = 0
 
         ##'Random walk','Core dependent','Frag. dependent', 'Habitat dependent', 'Moderately generalist'
         
@@ -117,7 +120,7 @@ def OnHabitat(landscape_habdist, landscape_frag_pid, species_profile, listpositi
 
 
 #----------------------------------------------------------------------
-def disperse_habitat_dependent(distance_matrix, frag_pid_matrix, indiv_xy, species_profile, indiv_isdispersing, indiv_totaldistance, avg_movement_dist_meters, spatialresolution, when_dispersing_distance_factor, indiv_movdirectionX, indiv_movdirectionY):
+def disperse_habitat_dependent(distance_matrix, indiv_xy, species_profile, indiv_isdispersing, indiv_totaldistance, avg_movement_dist_meters, spatialresolution, when_dispersing_distance_factor, indiv_movdirectionX, indiv_movdirectionY, frag_pid_matrix = ''):
     '''
     This function ...
     '''
@@ -132,7 +135,7 @@ def disperse_habitat_dependent(distance_matrix, frag_pid_matrix, indiv_xy, speci
         y1=modified_indiv_xy[indiv][1]
         if indiv_isdispersing[indiv] == 0:
             modified_indiv_xy_listposition = get_listofposition(distance_matrix, modified_indiv_xy[indiv], avg_movement_dist_meters, spatialresolution)
-            modified_indiv_xy_listposition, distfromedge = OnHabitat(distance_matrix, frag_pid_matrix, species_profile, modified_indiv_xy_listposition)
+            modified_indiv_xy_listposition, distfromedge = OnHabitat(distance_matrix, species_profile, modified_indiv_xy_listposition, frag_pid_matrix)
             
             if len(modified_indiv_xy_listposition)>0:
                 PROB_go_core_region=0

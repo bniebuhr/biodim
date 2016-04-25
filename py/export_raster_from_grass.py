@@ -5,6 +5,18 @@ import os
 #######################################################################################
 ## Functions for GRASS 7
 
+def set_region(x_col, y_row, dims):
+    
+    dist_ns = float(dims[0])
+    dist_lw = float(dims[1])
+    
+    south = y_row - dist_ns/2
+    north = y_row + dist_ns/2
+    west = x_col - dist_lw/2
+    east = x_col + dist_lw/2
+    
+    grass.run_command('g.region', n = north, e = east, s = south, w = west, res=5)#, flags='p')
+    
 
 def export_raster_from_grass(landscape_grassname_habmat, landscape_grassname_hqmqlq, landscape_grassname_habdist, landscape_grassname_habmat_pid, landscape_grassname_habmat_areapix, landscape_grassname_hqmqlq_quality, landscape_grassname_hqmqlq_AREAqual, landscape_grassname_frag_pid, landscape_grassname_frag_AREApix,landscape_grassname_frag_AREAqual, landscape_grassname_dila01clean_pid, landscape_grassname_dila01clean_AREApix,landscape_grassname_dila01clean_AREAqual, landscape_grassname_dila02clean_pid, landscape_grassname_dila02clean_AREApix, landscape_grassname_dila02clean_AREAqual, defaultDir, inputDir, tempDir, exportPNG = True):
     '''This function read a set of filenames and export it from grass Mapsets 
@@ -109,7 +121,7 @@ def export_raster_from_grass(landscape_grassname_habmat, landscape_grassname_hqm
         grass.run_command('r.out.png', input=landscape_grassname_dila02clean_AREAqual.replace("HABMAT_grassclump_dila02_clean_AreaHA","HABMAT_DILA02_AREAqualHA").replace("HQ_","")+'@MS_HABMAT_DILA02_AREAqual', output='random_landscape_dila02clean_AREAqual.png', overwrite = True)
     
     
-def export_raster_from_grass_userbase(landscape_grassname_habmat, landscape_grassname_habdist, landscape_grassname_habmat_pid, landscape_grassname_habmat_areapix, landscape_grassname_frag_pid, landscape_grassname_frag_AREApix, landscape_grassname_dila01clean_pid, landscape_grassname_dila01clean_AREApix, landscape_grassname_dila02clean_pid, landscape_grassname_dila02clean_AREApix, defaultDir, inputDir, tempDir, exportPNG = True):
+def export_raster_from_grass_userbase(landscape_grassname_habmat, landscape_grassname_habdist, landscape_grassname_habmat_pid, landscape_grassname_habmat_areapix, landscape_grassname_frag_pid, landscape_grassname_frag_AREApix, landscape_grassname_dila01clean_pid, landscape_grassname_dila01clean_AREApix, landscape_grassname_dila02clean_pid, landscape_grassname_dila02clean_AREApix, defaultDir, inputDir, tempDir, exportPNG = True, usegrid = False, x_col = '', y_row = '', dims = ''):
     '''This function read a set of filenames and export it from grass Mapsets 
     For this simulations, filename will be a list of _habmat, 
     _dist, _funcArea (several), _effectiveFuncArea
@@ -127,7 +139,10 @@ def export_raster_from_grass_userbase(landscape_grassname_habmat, landscape_gras
     os.chdir(defaultDir)
     os.chdir(tempDir)  
 
-    grass.run_command('g.region', rast=landscape_grassname_habmat+'@userbase')
+    if usegrid:
+        set_region(x_col = x_col, y_row = y_row, dims = dims)
+    else:
+        grass.run_command('g.region', rast=landscape_grassname_habmat+'@userbase')
 
     grass.run_command('r.out.ascii', input=landscape_grassname_habmat+'@userbase', output='random_landscape_habmat.asc', overwrite = True)
     grass.run_command('r.out.png', input=landscape_grassname_habmat+'@userbase', output='random_landscape_habmat.png', overwrite = True)

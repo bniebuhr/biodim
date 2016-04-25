@@ -16,7 +16,7 @@ from PIL import Image
 from color_pallete import color_pallete 
 
 #---------------------------------------
-def plot_walk(landscape_matrix, indiv_xy, aux_isdispersing, aux_islive, nruns, aux_isdispersingRESET, timestep, output_prefix, UserBaseMap, indivpixels_isNOTlive, indivpixels_isdispersing, indivpixels_whenmoving):
+def plot_walk(landscape_matrix, indiv_xy, aux_isdispersing, aux_islive, nlandscape, nruns, aux_isdispersingRESET, timestep, output_prefix, UserBaseMap, indivpixels_isNOTlive, indivpixels_isdispersing, indivpixels_whenmoving):
     '''....'''
 
     #random.seed(123) #to force every individual have the same color
@@ -73,6 +73,15 @@ def plot_walk(landscape_matrix, indiv_xy, aux_isdispersing, aux_islive, nruns, a
 
     #im.save(Form1.background_filename[0])
     
+    if nlandscape<9:
+        myzerosl="000"
+    elif nlandscape<99:
+        myzerosl="00"
+    elif nlandscape<999:        
+        myzerosl="0"
+    else:
+        myzerosl=""
+    
     if nruns<9:
         myzeros="000"
     elif nruns<99:
@@ -82,7 +91,7 @@ def plot_walk(landscape_matrix, indiv_xy, aux_isdispersing, aux_islive, nruns, a
     else:
         myzeros=""
         
-    saverun=output_prefix+"_run_"+myzeros+str(nruns+1)+".png"
+    saverun=output_prefix+"_map_"+myzerosl+str(nlandscape+1)+"_run_"+myzeros+str(nruns+1)+".png"
     #im.save(saverun)
 
     if timestep<9:
@@ -93,7 +102,7 @@ def plot_walk(landscape_matrix, indiv_xy, aux_isdispersing, aux_islive, nruns, a
         myzerosTS="0"
     else:
         myzerosTS=""
-    saverunTS="moves/"+output_prefix+"_run_"+myzeros+str(nruns+1)+"_TS_"+myzerosTS+str(timestep+1)+".png"
+    saverunTS="moves/"+output_prefix+"_map_"+myzerosl+str(nlandscape+1)+"_run_"+myzeros+str(nruns+1)+"_TS_"+myzerosTS+str(timestep+1)+".png"
     im2=im.copy()
     im2.save(saverunTS)
        

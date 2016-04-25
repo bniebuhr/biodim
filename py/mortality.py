@@ -1,4 +1,5 @@
 import random
+from check_landscaperange import check_landscaperange
 
 def get_safetyness_mortality(tab_in, species_profile, distMeters, spatialresolution):
     '''
@@ -46,6 +47,35 @@ def get_safetyness_mortality(tab_in, species_profile, distMeters, spatialresolut
                 elif species_profile=="Highly generalist":
                     return tab_in[line-1][5]
     return 0
+
+
+def estimate_movement_cost(tab_safetyness, landscape_matrix, species_profile, aux_xy, include_habitatquality, landscape_hqmqlq_quality, distfromedge, spatialresolution):
+    protecdness = get_safetyness_mortality(tab_in=tab_safetyness, species_profile=species_profile, distMeters=distfromedge, spatialresolution=spatialresolution)
+    
+    aux=[aux_xy]
+    aux, changed_quadrant = check_landscaperange(aux, landscape_matrix)
+    YY=aux[0][0]
+    XX=aux[0][1]        # leads with spatial resolution - PIXELS
+    row=int(YY)
+    col=int(XX)
+    
+    if include_habitatquality == "HabitatQuality_YES":
+        habqualyOnPosition=landscape_hqmqlq_quality[row][col]
+    else:
+        habqualyOnPosition=1.0
+
+    if protecdness<0.05:
+        protecdness=0.05
+    if protecdness>1:
+        protecdness=1.0
+    if habqualyOnPosition<0.05:
+        habqualyOnPosition=0.05
+    if habqualyOnPosition>1:
+        habqualyOnPosition=1.0
+    
+    cost=1.0/(protecdness*habqualyOnPosition)
+    
+    return cost
 
 
 def kill_individual_new(tab_mortality, sp_profile, distfromedge, spatialres):

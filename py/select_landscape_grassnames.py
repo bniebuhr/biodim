@@ -174,7 +174,10 @@ def select_landscape_grassnames_userbase(select_form = 'random', previous_landsc
             index = habmat.index(previous_landscape+'\n')
             landscape_grassname_habmat=habmat[(index+1)].replace("\n","")
     elif select_form == 'type':
-        landscape_grassname_habmat=previous_landscape    
+        if previous_landscape == '':
+            landscape_grassname_habmat=habmat[0].replace("\n","")
+        else:
+            landscape_grassname_habmat=previous_landscape
     landscape_index=landscape_grassname_habmat[0:11]
     
     #.... return grassname for HABDIST (Distance from EDGE of habitat)

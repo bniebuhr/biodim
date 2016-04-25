@@ -33,6 +33,7 @@ ID_IBMCFG=102
 ID_EXIT=110
 
 UserBaseMap=False
+UseGrid=False
 
 #---------------------------------------------------
 # Auxiliary modules
@@ -42,9 +43,9 @@ from read_table import read_table
 # from head_split_up_line import head_split_up_line
 # this function is used in the read_landscape_head_ascii_standard module
 #---------------------------------------------------
-from distance_between_indiv import  distance_between_indiv_pix_meters # leads with spatial resolution/distance
+from distance_between_indiv import  distance_between_indiv_pix_meters
 #---------------------------------------------------
-from estimate_distedge import estimate_distedge # leads with spatial resolution/distance
+from estimate_distedge import estimate_distedge
 #---------------------------------------------------
 from estimate_netdisplacement import estimate_netdisplacement
 #---------------------------------------------------
@@ -54,24 +55,24 @@ from estimate_netdisplacement import estimate_netdisplacement
 #---------------------------------------------------
 #from select_landscape_grassnames import * 
 #---------------------------------------------------
-#from export_raster_from_grass import *             ### GRASS FUNCTIONS
+#from export_raster_from_grass import *
 #---------------------------------------------------
 #from read_landscape_head_ascii_standard import read_landscape_head_ascii_standard
 # the three function above are used by pickup_one_landscape
 #---------------------------------------------------
-from pickup_one_landscape import pickup_one_landscape
+from pickup_one_landscape import pickup_one_landscape, pickup_one_landscape_sep, pickup_one_cell, get_landscape_centers
 #---------------------------------------------------
 from get_map_info import map_info
 #---------------------------------------------------
 from color_pallete import color_pallete
 #---------------------------------------------------
-from getForest import *                             # leads with spatial resolution - PIXELS - nao precisa mexer
+from getForest import *
 #---------------------------------------------------
-from identify_patchid import identify_patchid       # leads with spatial resolution - PIXELS
+from identify_patchid import identify_patchid
 #---------------------------------------------------
-from identify_habarea import identify_habarea       # leads with spatial resolution - PIXELS
+from identify_habarea import identify_habarea
 #---------------------------------------------------
-from check_landscaperange import check_landscaperange # leads with spatial resolution - PIXELS and distance
+from check_landscaperange import check_landscaperange
 #---------------------------------------------------
 
 #---------------------------------------------------
@@ -85,48 +86,19 @@ from LOCI_start import LOCI_start
 #---------------------------------------------------
 # Population modules
 #---------------------------------------------------
-from estimate_start_popsize import estimate_start_popsize # leads with spatial resolution - PIXELS AND AREA
+from estimate_start_popsize import estimate_start_popsize
 #---------------------------------------------------
-from populate import populate_random                       # leads with spatial resolution - PIXELS
+from populate import populate_random
 #---------------------------------------------------
-from check_overpopulation_onpatch import check_overpopulation_onpatch # leads with spatial resolution - PIXELS AND AREA
+from check_overpopulation_onpatch import check_overpopulation_onpatch
 #---------------------------------------------------
-from reset_isdispersing import reset_isdispersing   # leads with spatial resolution - PIXELS AND AREA
+from reset_isdispersing import reset_isdispersing
 #---------------------------------------------------
 
 #---------------------------------------------------
 # Mortality modules
 #---------------------------------------------------
-from mortality import get_safetyness_mortality, kill_individual_new # leads with spatial resolution - PIXELS AND DISTANCE
-#---------------------------------------------------
-def estimate_movement_cost(tab_safetyness, landscape_matrix, species_profile, aux_xy, include_habitatquality, landscape_hqmqlq_quality, distfromedge, spatialresolution):
-    protecdness = get_safetyness_mortality(tab_in=tab_safetyness, species_profile=species_profile, distMeters=distfromedge, spatialresolution=spatialresolution)
-    
-    aux=[aux_xy]
-    aux, changed_quadrant = check_landscaperange(aux, landscape_matrix)
-    YY=aux[0][0]
-    XX=aux[0][1]        # leads with spatial resolution - PIXELS
-    row=int(YY)
-    col=int(XX)
-    
-    if include_habitatquality == "HabitatQuality_YES":
-        habqualyOnPosition=landscape_hqmqlq_quality[row][col]
-    else:
-        habqualyOnPosition=1.0
-
-    if protecdness<0.05:
-        protecdness=0.05
-    if protecdness>1:
-        protecdness=1.0
-    if habqualyOnPosition<0.05:
-        habqualyOnPosition=0.05
-    if habqualyOnPosition>1:
-        habqualyOnPosition=1.0
-    
-    cost=1.0/(protecdness*habqualyOnPosition)
-    
-    return cost
-
+from mortality import get_safetyness_mortality, kill_individual_new, estimate_movement_cost
 #---------------------------------------------------
 
 #---------------------------------------------------
@@ -147,7 +119,75 @@ from movement import get_listofposition, OnHabitat, disperse_habitat_dependent, 
 #---------------------------------------------------
 from create_synthesis import create_synthesis
 #---------------------------------------------------
-def organize_output(moment, grassname_habmat, isdispersing, isfemale, islive, totaldistance, netdisplacement, step_length, experiment_info, actualrun, actual_step, actual_movementcost, timestep_waslive, number_of_meetings, LOCI_start, LOCI_end, initpos, xy):
+def organize_output_simple(moment, output_prefix,
+                           experiment_info, grassname_habmat, pland, landscape, nlandscapes, actualrun, runsperlandscape, actual_step, timesteps,
+                           species_profile, start_popsize, homerangesize, avg_movement_dist_meters, when_dispersing_distance_factor,
+                           spatialresolution, x_west, y_north,
+                           xy):
+
+    if actualrun<9:
+        myzeros="000"
+    elif actualrun<99:
+        myzeros="00"
+    elif actualrun<999:        
+        myzeros="0"
+    else:
+        myzeros=""
+
+#    for indiv in range(len(timestep_waslive)):
+#        if timestep_waslive[indiv]==0:
+#            timestep_waslive[indiv]=actual_step+1
+
+    #if moment=="ongoingstep":
+        #if Form1.output_store_ongoingsteps_indiv==1:
+            #output_filename_indiv=output_prefix+'_'+grassname_habmat+'_'+landscape+"_indiv_step"+".txt"
+            #file_output_indiv=open(output_filename_indiv,"a")
+            #xy_real = rowscols2xy(xy, spatialresolution=spatialresolution, x_west=x_west, y_north=y_north)
+            #if actual_step==-1 and actualrun==0:
+                #file_output_indiv.write('experiment_info;actuallandscape;nlandscapes;actualrun;nruns;grassname_habmat;PLAND;species_profile;start_popsize;actual_step;timesteps;homerangesize;avgsteplength;dispfactor;')
+                #for indiv in range(len(xy)):
+                    #file_output_indiv.write('ind'+str(indiv+1)+'_x;ind'+str(indiv+1)+'_y;')
+                #file_output_indiv.write('\n')
+            
+            #file_output_indiv.write('%s;' % experiment_info)
+            #file_output_indiv.write('%s;' % landscape)
+            #file_output_indiv.write('%s;' % str(nlandscapes))
+            #file_output_indiv.write('%s;' % str(actualrun+1))
+            #file_output_indiv.write('%s;' % str(runsperlandscape))
+            #file_output_indiv.write('%s;' % grassname_habmat)
+            #file_output_indiv.write('%s;' % str(pland))
+            #file_output_indiv.write('%s;' % species_profile)
+            #file_output_indiv.write('%s;' % str(start_popsize))
+            #file_output_indiv.write('%s;' % str(actual_step+1))
+            #file_output_indiv.write('%s;' % str(timesteps))
+            #file_output_indiv.write('%s;' % str(homerangesize))
+            #file_output_indiv.write('%s;' % str(avg_movement_dist_meters))
+            #file_output_indiv.write('%s;' % str(when_dispersing_distance_factor))
+            #for indiv in range(len(xy)):
+                #file_output_indiv.write('%s;' % str(xy_real[indiv][0]))
+                #file_output_indiv.write('%s;' % str(xy_real[indiv][1]))
+            #file_output_indiv.write('\n')
+            #file_output_indiv.close()
+            
+    if moment=="ongoingstep":
+        if Form1.output_store_ongoingsteps_indiv==1:
+            output_filename_indiv=output_prefix+'_'+grassname_habmat+'_'+landscape+"_indiv_step"+".txt"
+            file_output_indiv=open(output_filename_indiv,"a")
+            xy_real = rowscols2xy(xy, spatialresolution=spatialresolution, x_west=x_west, y_north=y_north)
+            if actual_step==-1 and actualrun==0:
+                file_output_indiv.write('actuallandscape;grassname_habmat;actual_step;ind;x;y;\n')
+            
+            for indiv in range(len(xy)):
+                file_output_indiv.write('%s;' % landscape)
+                file_output_indiv.write('%s;' % grassname_habmat)
+                file_output_indiv.write('%s;' % str(actual_step+1))
+                file_output_indiv.write('%s;' % str(indiv+1))
+                file_output_indiv.write('%s;' % str(xy_real[indiv][0]))
+                file_output_indiv.write('%s;' % str(xy_real[indiv][1]))
+                file_output_indiv.write('\n')
+            file_output_indiv.close()    
+
+def organize_output(moment, grassname_habmat, pland, isdispersing, isfemale, islive, totaldistance, netdisplacement, step_length, experiment_info, actualrun, actual_step, actual_movementcost, timestep_waslive, number_of_meetings, LOCI_start, LOCI_end, initpos, xy):
     """
     Is there a problem (output name) if nruns > 9999? # Is "myzeros"really used??
     # !!!!!!!!!! a virgula esta correta????
@@ -206,7 +246,7 @@ def organize_output(moment, grassname_habmat, isdispersing, isfemale, islive, to
                 file_output_indiv.write('%s;' % str(actualrun+1))
                 file_output_indiv.write('%s;' % Form1.numberruns)
                 file_output_indiv.write('%s;' % grassname_habmat)
-                file_output_indiv.write('%s;' % Form1.landscape_grassname_habmat[19:22])
+                file_output_indiv.write('%s;' % str(pland))
                 file_output_indiv.write('%s;' % Form1.landscape_grassname_habmat[24:27])
                 
                 HABQUAL=0
@@ -380,7 +420,7 @@ def organize_output(moment, grassname_habmat, isdispersing, isfemale, islive, to
             file_output_landscape.write('\n')
             file_output_landscape.close()
             
-        
+# Visualization modules
 #---------------------------------------
 from visualization import plot_walk
 #---------------------------------------
@@ -395,6 +435,7 @@ class Form1(wx.Panel):
         Form1.biodim_version = 'BioDIM v. 1.05b.1'
         #------------------------------------------------
         Form1.UserBaseMap=UserBaseMap
+        Form1.usegrid=UseGrid
         
         Form1.defaultDIR = os.getcwd()
         Form1.tempDir='../temp'
@@ -427,16 +468,47 @@ class Form1(wx.Panel):
         Form1.output_store_summary_landscape=0
         
         self.speciesList = ['Random walk','Core dependent','Frag. dependent', 'Habitat dependent', 'Moderately generalist', 'Highly generalist']
-        
-        self.select_landscapeList = ['Random landscape', 'Follow order', 'Select one landscape']
-
         Form1.species_profile=self.speciesList[3]
-        Form1.select_landscape_txt = self.select_landscapeList[0]
-        Form1.select_landscape = 'random'
+        
+        self.select_gridList = ['Random cell', 'Follow order', 'Select one cell']
+
+        ###########################################
+        # Mexer nesses parametros!!!!!
+        if Form1.usegrid:
+            self.select_landscapeList = ['Select one landscape']
+            Form1.select_landscape_txt = self.select_landscapeList[0]
+            Form1.select_landscape = 'type'            
+
+            self.gridnameList=grass.list_grouped ('vect', pattern='*') ['userbase']
+            Form1.gridname=Form1.previous_gridname=self.gridnameList[0]
+            Form1.previous_gridname=Form1.gridname
+            Form1.gridcols = 'ID,x_center,y_center,foco2'
+            Form1.select_grid_txt = self.select_gridList[0]
+            Form1.select_cell = 'random'
+            Form1.landscape_dims = (7000, 7000) # in y (meters), in x (meters)           
+        else:
+            self.select_landscapeList = ['Random landscape', 'Follow order', 'Select one landscape']
+            Form1.select_landscape_txt = self.select_landscapeList[0]
+            Form1.select_landscape = 'random'            
+            
+            self.gridnameList = ''
+            Form1.gridname = ''
+            Form1.previous_gridname=Form1.gridname
+            Form1.gridcols = ''
+            Form1.select_grid_txt = ''
+            Form1.select_cell = ''
+            
+            Form1.landscape_dims = ''
+            Form1.x_center = ''
+            Form1.y_center = ''
+            
+            
         Form1.previous_landscape=''
+        Form1.previous_index = ''
+        
         
         Form1.start_popsize=50
-        Form1.numberruns=100
+        Form1.numberruns=5
         Form1.runsperlandscape=1
         Form1.timesteps=200
         #***********************************************
@@ -477,8 +549,8 @@ class Form1(wx.Panel):
         Form1.indivpixels_isNOTlive=1
        
         # Movement settings
-        Form1.avg_movement_dist_meters=60.0 # average step length in each time unit, in meters
-        Form1.when_dispersing_distance_factor=3.0
+        Form1.avg_movement_dist_meters=100.0 # average step length in each time unit, in meters
+        Form1.when_dispersing_distance_factor=5.0
         
         Form1.indiv_agemean = 100
         Form1.indiv_agestd  = 20
@@ -501,41 +573,50 @@ class Form1(wx.Panel):
 
         # ------------------------
         # Selecting a landscape and calculating initial population
-        if not (Form1.select_landscape == 'type' and Form1.landscape_grassname_habmat == Form1.previous_landscape):
-            if Form1.UserBaseMap:
-                Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist, Form1.landscape_habmat_pid, Form1.landscape_habmat_areapix, Form1.landscape_frag_pid, Form1.landscape_frag_AREApix, Form1.landscape_dila01clean_pid, Form1.landscape_dila01clean_AREApix, Form1.landscape_dila02clean_pid, Form1.landscape_dila02clean_AREApix=pickup_one_landscape(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
-                rows = len(Form1.landscape_matrix)
-                cols = len(Form1.landscape_matrix[0])
-                Form1.landscape_hqmqlq_quality = [[1.0] * cols] * rows
+        if Form1.UserBaseMap:
+            if Form1.usegrid:
+                Form1.cell_index_list, Form1.cell_id_string, Form1.cell_x_col, Form1.cell_y_row = get_landscape_centers(mapa=Form1.gridname, cols=Form1.gridcols)
+                Form1.cell_index, Form1.cell_id, Form1.x_center, Form1.y_center = pickup_one_cell(Form1.cell_index_list, Form1.cell_id_string, Form1.cell_x_col, Form1.cell_y_row, select_form='random', previous_index='')
+                Form1.previous_index = Form1.cell_index
+                print 'Selected landscape ID: '+Form1.cell_id
+                Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist=pickup_one_landscape_sep(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, usegrid=Form1.usegrid, x_col=Form1.x_center, y_row=Form1.y_center, dims=Form1.landscape_dims, exportPNG=Form1.exportPNG)
             else:
-                Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist, Form1.landscape_habmat_pid, Form1.landscape_habmat_areapix, Form1.landscape_hqmqlq_quality, Form1.landscape_hqmqlq_AREAqual,Form1.landscape_frag_pid,Form1.landscape_frag_AREApix,Form1.landscape_frag_AREAqual,Form1.landscape_dila01clean_pid,Form1.landscape_dila01clean_AREApix,Form1.landscape_dila01clean_AREAqual,Form1.landscape_dila02clean_pid,Form1.landscape_dila02clean_AREApix,Form1.landscape_dila02clean_AREAqual=pickup_one_landscape(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+                #Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist, Form1.landscape_habmat_pid, Form1.landscape_habmat_areapix, Form1.landscape_frag_pid, Form1.landscape_frag_AREApix, Form1.landscape_dila01clean_pid, Form1.landscape_dila01clean_AREApix, Form1.landscape_dila02clean_pid, Form1.landscape_dila02clean_AREApix=pickup_one_landscape(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+                Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist=pickup_one_landscape_sep(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+            rows = len(Form1.landscape_matrix)
+            cols = len(Form1.landscape_matrix[0])
+            Form1.landscape_hqmqlq_quality = [[1.0] * cols] * rows
+        else:
+            #Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist, Form1.landscape_habmat_pid, Form1.landscape_habmat_areapix, Form1.landscape_hqmqlq_quality, Form1.landscape_hqmqlq_AREAqual,Form1.landscape_frag_pid,Form1.landscape_frag_AREApix,Form1.landscape_frag_AREAqual,Form1.landscape_dila01clean_pid,Form1.landscape_dila01clean_AREApix,Form1.landscape_dila01clean_AREAqual,Form1.landscape_dila02clean_pid,Form1.landscape_dila02clean_AREApix,Form1.landscape_dila02clean_AREAqual=pickup_one_landscape(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+            Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist, Form1.landscape_hqmqlq_quality=pickup_one_landscape_sep(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+        
         Form1.previous_landscape = Form1.landscape_grassname_habmat
         
         if Form1.UserBaseMap:
-            pland, forest=getForest_habmat(landscape_matrix = Form1.landscape_matrix)
+            pland, forest = getForest_habmat(landscape_matrix = Form1.landscape_matrix)
         else:
-            pland, forest=getForest(landscape_matrix = Form1.landscape_matrix)        
+            pland, forest = getForest(landscape_matrix = Form1.landscape_matrix)        
         
         # Map information - in principle res_x and res_y are equal - we can ignore res_y
-        Form1.mapdims, Form1.x_west, Form1.x_east, Form1.y_south, Form1.y_north, Form1.spatialresolution, res_y = map_info(landscape=Form1.landscape_grassname_habmat)        
+        Form1.mapdims, Form1.x_west, Form1.x_east, Form1.y_south, Form1.y_north, Form1.spatialresolution, res_y = map_info(landscape=Form1.landscape_grassname_habmat, usegrid=Form1.usegrid, x_center=Form1.x_center, y_center=Form1.y_center, dims=Form1.landscape_dims)        
         
         # ------------------------
         # Conitnue initializing GUI
         
         # A multiline TextCtrl - This is here to show how the events work in this program, don't pay too much attention to it
-        self.logger = wx.TextCtrl(self,5, "", wx.Point(20,495), wx.Size(330,100), wx.TE_MULTILINE | wx.TE_READONLY)
+        self.logger = wx.TextCtrl(self,5, "", wx.Point(20,525), wx.Size(360,100), wx.TE_MULTILINE | wx.TE_READONLY)
         
         # A button
-        self.button =wx.Button(self, 10, "START SIMULATION", wx.Point(10, 600))
+        self.button =wx.Button(self, 10, "START SIMULATION", wx.Point(10, 630))
         wx.EVT_BUTTON(self, 10, self.OnClick)
         
-        self.button =wx.Button(self, 9, "change Background", wx.Point(140, 600))
+        self.button =wx.Button(self, 9, "change Background", wx.Point(140, 630))
         wx.EVT_BUTTON(self, 9, self.OnClick)
 
-        self.button =wx.Button(self, 11, "change Landscape", wx.Point(140, 630))
+        self.button =wx.Button(self, 11, "change Landscape", wx.Point(140, 660))
         wx.EVT_BUTTON(self, 11, self.OnClick)
 
-        self.button =wx.Button(self, 8, "EXIT", wx.Point(260, 600))
+        self.button =wx.Button(self, 8, "EXIT", wx.Point(260, 630))
         wx.EVT_BUTTON(self, 8, self.OnExit)
 
         ##------------ plot landscape image on wx.Panel
@@ -639,30 +720,69 @@ class Form1(wx.Panel):
         wx.EVT_TEXT(self, 97, self.EvtText)
         if Form1.select_landscape != 'type':
             Form1.edtlandscape_name.Disable()
+            
+        ## Grid options
+        Form1.lblgridname = wx.StaticText(self, -1, "Grid name/cols:",wx.Point(20, 340))
+        self.editselect_gridnameList = wx.ComboBox(self, 98, Form1.gridname, wx.Point(110, 335), wx.Size(120, -1),
+                                                    self.gridnameList, wx.CB_DROPDOWN)  
+        wx.EVT_COMBOBOX(self, 98, self.EvtComboBox)
+        wx.EVT_TEXT(self, 98, self.EvtText)
+        
+        Form1.edtgridcol = wx.TextCtrl(self, 99, Form1.gridcols, wx.Point(240, 335), wx.Size(120,-1))
+        wx.EVT_TEXT(self, 99, self.EvtText)
+        
+        if Form1.usegrid:
+            Form1.edtgridcol.SetToolTip(wx.ToolTip("Type here the name of the folowing shape grid columns:\n "+
+                                                   "1)ID\n 2)x_center\n 3)y_center\n 4)selection of grid cells to consider (if there is)\n"+
+                                                   "Type it with commas and whithout spaces. Example:\n"+
+                                                   "ID,x,y,focus"))        
+        else:
+            self.editselect_gridnameList.Disable()
+            Form1.edtgridcol.Disable()
+        
+        ##############################
+        # aqui tem que colocar a lista de celulas...
+        Form1.lblselect_cell = wx.StaticText(self, -1, "Select Grid cells:",wx.Point(20, 370))
+        self.editselect_cellList = wx.ComboBox(self, 121, Form1.select_grid_txt, wx.Point(110, 365), wx.Size(120, -1),
+                                               self.select_gridList, wx.CB_DROPDOWN)  
+        wx.EVT_COMBOBOX(self, 121, self.EvtComboBox)
+        wx.EVT_TEXT(self, 121, self.EvtText)
+        
+        Form1.edtcellname = wx.TextCtrl(self, 122, '', wx.Point(240, 365), wx.Size(120,-1))
+        wx.EVT_TEXT(self, 122, self.EvtText)
+        if Form1.select_cell != 'type':
+            Form1.edtcellname.Disable()        
+        
+        if Form1.usegrid:
+            Form1.edtcellname.SetToolTip(wx.ToolTip("ID of the cell to outline the landscape"))        
+        else:
+            self.editselect_cellList.Disable()
+            Form1.edtcellname.Disable()        
+        
         
         # Simulation settings
-        self.lblname6 = wx.StaticText(self, -1, "Simulation settings:", wx.Point(20,395))
+        self.lblname6 = wx.StaticText(self, -1, "Simulation settings:", wx.Point(20,425))
         
-        Form1.lbltimesteps = wx.StaticText(self, -1, "Time Steps:",wx.Point(20,420))
-        Form1.edttimesteps = wx.TextCtrl(self, 40, str(Form1.timesteps), wx.Point(82, 415), wx.Size(35,-1))
+        Form1.lbltimesteps = wx.StaticText(self, -1, "Time Steps:",wx.Point(20,450))
+        Form1.edttimesteps = wx.TextCtrl(self, 40, str(Form1.timesteps), wx.Point(82, 445), wx.Size(35,-1))
         wx.EVT_TEXT(self, 40, self.EvtText)
         wx.EVT_CHAR(Form1.edttimesteps, self.EvtChar)        
         
-        Form1.lblnumberruns = wx.StaticText(self, -1, "N. of Landscapes:", wx.Point(120,420))
-        Form1.edtnumberruns = wx.TextCtrl(self, 50, str(Form1.numberruns), wx.Point(210, 415), wx.Size(35,-1))
+        Form1.lblnumberruns = wx.StaticText(self, -1, "N. of Landscapes:", wx.Point(120,450))
+        Form1.edtnumberruns = wx.TextCtrl(self, 50, str(Form1.numberruns), wx.Point(210, 445), wx.Size(35,-1))
         wx.EVT_TEXT(self, 50, self.EvtText)
         wx.EVT_CHAR(Form1.edtnumberruns, self.EvtChar)
                 
-        Form1.lblrunsperlandscape = wx.StaticText(self, -1, "Runs/landscape:", wx.Point(250,420))
-        Form1.edtrunsperlandscape = wx.TextCtrl(self, 51, str(Form1.runsperlandscape), wx.Point(335, 415), wx.Size(35,-1))
+        Form1.lblrunsperlandscape = wx.StaticText(self, -1, "Runs/landscape:", wx.Point(250,450))
+        Form1.edtrunsperlandscape = wx.TextCtrl(self, 51, str(Form1.runsperlandscape), wx.Point(335, 445), wx.Size(35,-1))
         wx.EVT_TEXT(self, 51, self.EvtText)
         wx.EVT_CHAR(Form1.edtrunsperlandscape, self.EvtChar)        
 
         # Visualization options
-        self.lblname7 = wx.StaticText(self, -1, "Visualization options:", wx.Point(20,445))
+        self.lblname7 = wx.StaticText(self, -1, "Visualization options:", wx.Point(20,475))
         
-        Form1.lblindivpixels = wx.StaticText(self, -1, "Indiv.Size (pix):",wx.Point(20,470))
-        Form1.edtindivpixels = wx.TextCtrl(self, 70, str(Form1.indivpixels_whenmoving), wx.Point(100, 465), wx.Size(35,-1))
+        Form1.lblindivpixels = wx.StaticText(self, -1, "Indiv.Size (pix):",wx.Point(20,500))
+        Form1.edtindivpixels = wx.TextCtrl(self, 70, str(Form1.indivpixels_whenmoving), wx.Point(100, 495), wx.Size(35,-1))
         wx.EVT_TEXT(self, 70, self.EvtText)
         wx.EVT_CHAR(Form1.edtindivpixels, self.EvtChar)
         if Form1.plotmovements == 0: 
@@ -678,10 +798,10 @@ class Form1(wx.Panel):
         
         self.lblselect_landscapeList = wx.StaticText(self,-1,"Select Landscape:",wx.Point(20, 310))
         self.editselect_landscapeList = wx.ComboBox(self, 96, Form1.select_landscape_txt, wx.Point(110, 305), wx.Size(120, -1),
-        self.select_landscapeList, wx.CB_DROPDOWN)
+                                                    self.select_landscapeList, wx.CB_DROPDOWN)
         wx.EVT_COMBOBOX(self, 96, self.EvtComboBox)
-        wx.EVT_TEXT(self, 96, self.EvtText)        
-        
+        wx.EVT_TEXT(self, 96, self.EvtText)
+
         # Checkbox
         self.insure1 = wx.CheckBox(self, 61, "Individual-step",wx.Point(160,100))
         wx.EVT_CHECKBOX(self, 61,   self.EvtCheckBox)   
@@ -703,12 +823,12 @@ class Form1(wx.Panel):
         self.insure6 = wx.CheckBox(self, 95, "Include mortality",wx.Point(285,160))
         wx.EVT_CHECKBOX(self, 95,   self.EvtCheckBox)             
         
-        self.insure7 = wx.CheckBox(self, 91, "Habitat quality on model",wx.Point(20,335))
+        self.insure7 = wx.CheckBox(self, 91, "Habitat quality on model",wx.Point(20,405))
         wx.EVT_CHECKBOX(self, 91,   self.EvtCheckBox)
         if Form1.UserBaseMap:
             self.insure7.Disable()
 
-        self.insure8 = wx.CheckBox(self, 94, "Plot movements",wx.Point(130,445))
+        self.insure8 = wx.CheckBox(self, 94, "Plot movements",wx.Point(130,475))
         wx.EVT_CHECKBOX(self, 94,   self.EvtCheckBox)
 
         # COLOCAR UMA OPCAO PARA EXPORTAR O ASC DE CADA PAISAGEM COM O PREFIXO E NUM DA SIMULACAO TAMBEM...
@@ -752,6 +872,29 @@ class Form1(wx.Panel):
                 self.logger.AppendText('Type the name of a landscape:\n')
                 for i in Form1.landscapeList:
                     self.logger.AppendText(i+'\n')
+                    
+        elif event.GetId()==98: #Form1.gridname
+            Form1.gridname = event.GetString()
+            self.logger.AppendText('Shape grid name: %s\n' % event.GetString())
+            
+        elif event.GetId()==121: #Form1.select_grid_txt
+            Form1.select_grid_txt=event.GetString()
+                        
+            if Form1.select_grid_txt == 'Random cell':
+                Form1.select_cell = 'random'
+                self.logger.AppendText('Select cell option: %s\n' % Form1.select_grid_txt)
+                Form1.edtcellname.Disable()
+            elif Form1.select_grid_txt == 'Follow order':
+                Form1.select_cell = 'order'
+                self.logger.AppendText('Select cell option: %s\n' % Form1.select_grid_txt)
+                Form1.edtcellname.Disable()
+            elif Form1.select_grid_txt == 'Select one cell':
+                Form1.select_cell = 'type'
+                self.logger.AppendText('Select cell option: %s\n' % Form1.select_grid_txt)
+                Form1.edtcellname.Enable()
+                self.logger.AppendText('Type the ID of a cell:\n')
+                for i in Form1.cell_id_string:
+                    self.logger.AppendText(i+'\n')            
         else:
             self.logger.AppendText('EvtComboBox: NEED TO BE SPECIFIED' )        
         
@@ -779,21 +922,54 @@ class Form1(wx.Panel):
         ###### Se formos tirar os pngs, precisamos mudar aqui
         if event.GetId()==11:   #11==CHANGE LANDSCAPE
             self.logger.AppendText(" Picking up new landscape ... please wait\n")
+                       
             
             #pickuplandscape
-            if not (Form1.select_landscape == 'type' and Form1.landscape_grassname_habmat == Form1.previous_landscape):
-                if Form1.UserBaseMap:
-                    Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist, Form1.landscape_habmat_pid, Form1.landscape_habmat_areapix, Form1.landscape_frag_pid, Form1.landscape_frag_AREApix, Form1.landscape_dila01clean_pid, Form1.landscape_dila01clean_AREApix, Form1.landscape_dila02clean_pid, Form1.landscape_dila02clean_AREApix=pickup_one_landscape(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
-                    rows = len(Form1.landscape_matrix)
-                    cols = len(Form1.landscape_matrix[0])
-                    Form1.landscape_hqmqlq_quality = [[1.0] * cols] * rows                
-                else:
-                    Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist, Form1.landscape_habmat_pid, Form1.landscape_habmat_areapix,Form1.landscape_hqmqlq_quality,Form1.landscape_hqmqlq_AREAqual,Form1.landscape_frag_pid,Form1.landscape_frag_AREApix,Form1.landscape_frag_AREAqual,Form1.landscape_dila01clean_pid,Form1.landscape_dila01clean_AREApix,Form1.landscape_dila01clean_AREAqual,Form1.landscape_dila02clean_pid,Form1.landscape_dila02clean_AREApix,Form1.landscape_dila02clean_AREAqual=pickup_one_landscape(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
             
+            re_image = 0
+            if Form1.UserBaseMap:
+                if Form1.usegrid:
+                    #print 'cell index = '+str(Form1.cell_index)
+                    #print 'previous = '+str(Form1.previous_index)
+                    #test = (Form1.select_cell == 'type' and Form1.cell_index == Form1.previous_index)
+                    #print 'test = '+str(test)
+                    #print "lands "+Form1.landscape_grassname_habmat 
+                    #print "pre lands"+Form1.previous_landscape
+                    #print 'test2 = '+str(not Form1.landscape_grassname_habmat == Form1.previous_landscape)
+                    if not (Form1.select_landscape == 'type' and Form1.landscape_grassname_habmat == Form1.previous_landscape):
+                        re_image = 1
+                        Form1.cell_index_list, Form1.cell_id_string, Form1.cell_x_col, Form1.cell_y_row = get_landscape_centers(mapa=Form1.gridname, cols=Form1.gridcols)                    
+                    if (not (Form1.previous_gridname == Form1.gridname)):# or (Form1.select_landscape == 'type' and Form1.landscape_grassname_habmat == Form1.previous_landscape:
+                        re_image = 1
+                        Form1.cell_index_list, Form1.cell_id_string, Form1.cell_x_col, Form1.cell_y_row = get_landscape_centers(mapa=Form1.gridname, cols=Form1.gridcols)
+                        Form1.previous_gridname=Form1.gridname
+                    if not (Form1.select_cell == 'type' and Form1.cell_index == Form1.previous_index):
+                        re_image = 1
+                        Form1.cell_index, Form1.cell_id, Form1.x_center, Form1.y_center = pickup_one_cell(Form1.cell_index_list, Form1.cell_id_string, Form1.cell_x_col, Form1.cell_y_row, select_form=Form1.select_cell, previous_index=Form1.previous_index)
+                        Form1.previous_index = Form1.cell_index
+                        Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist=pickup_one_landscape_sep(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, usegrid=Form1.usegrid, x_col=Form1.x_center, y_row=Form1.y_center, dims=Form1.landscape_dims, exportPNG=Form1.exportPNG)
+                        rows = len(Form1.landscape_matrix)
+                        cols = len(Form1.landscape_matrix[0])
+                        Form1.landscape_hqmqlq_quality = [[1.0] * cols] * rows                                        
+                else:
+                    if not (Form1.select_landscape == 'type' and Form1.landscape_grassname_habmat == Form1.previous_landscape):
+                        re_image = 1
+                        #Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist, Form1.landscape_habmat_pid, Form1.landscape_habmat_areapix, Form1.landscape_frag_pid, Form1.landscape_frag_AREApix, Form1.landscape_dila01clean_pid, Form1.landscape_dila01clean_AREApix, Form1.landscape_dila02clean_pid, Form1.landscape_dila02clean_AREApix=pickup_one_landscape(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+                        Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist=pickup_one_landscape_sep(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+                        rows = len(Form1.landscape_matrix)
+                        cols = len(Form1.landscape_matrix[0])
+                        Form1.landscape_hqmqlq_quality = [[1.0] * cols] * rows                
+            else:
+                if not (Form1.select_landscape == 'type' and Form1.landscape_grassname_habmat == Form1.previous_landscape):
+                    re_image = 1
+                    #Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist, Form1.landscape_habmat_pid, Form1.landscape_habmat_areapix,Form1.landscape_hqmqlq_quality,Form1.landscape_hqmqlq_AREAqual,Form1.landscape_frag_pid,Form1.landscape_frag_AREApix,Form1.landscape_frag_AREAqual,Form1.landscape_dila01clean_pid,Form1.landscape_dila01clean_AREApix,Form1.landscape_dila01clean_AREAqual,Form1.landscape_dila02clean_pid,Form1.landscape_dila02clean_AREApix,Form1.landscape_dila02clean_AREAqual=pickup_one_landscape(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+                    Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist, Form1.landscape_hqmqlq_quality=pickup_one_landscape_sep(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+            
+            if re_image == 1:
                 Form1.previous_landscape = Form1.landscape_grassname_habmat
                         
                 # Map information - in principle res_x and res_y are equal - we can ignore res_y
-                Form1.mapdims, Form1.x_west, Form1.x_east, Form1.y_south, Form1.y_north, Form1.spatialresolution, res_y = map_info(landscape=Form1.landscape_grassname_habmat)        
+                Form1.mapdims, Form1.x_west, Form1.x_east, Form1.y_south, Form1.y_north, Form1.spatialresolution, res_y = map_info(landscape=Form1.landscape_grassname_habmat, usegrid=Form1.usegrid, x_center=Form1.x_center, y_center=Form1.y_center, dims=Form1.landscape_dims)
                
                 # background
                 os.chdir(Form1.defaultDIR)
@@ -814,10 +990,16 @@ class Form1(wx.Panel):
                 wx.StaticBitmap(self, -1, jpg1, (450,30), (jpg1.GetWidth(), jpg1.GetHeight()), style=wx.SIMPLE_BORDER)
             
                 Form1.background_filename=Form1.background_filename_start
-            
-                self.logger.AppendText(" New landscape: %s\n" % Form1.landscape_grassname_habmat )
+                
+                if Form1.usegrid:
+                    self.logger.AppendText(" New: landscape: %s, ID: %s\n" % (Form1.landscape_grassname_habmat, Form1.cell_id) )
+                else:
+                    self.logger.AppendText(" New landscape: %s\n" % Form1.landscape_grassname_habmat )
             else:
-                self.logger.AppendText(" Same landscape (option 'type'): %s\n" % Form1.landscape_grassname_habmat )
+                if Form1.usegrid:
+                    self.logger.AppendText(" Same: landscape: %s, ID: %s\n" % (Form1.landscape_grassname_habmat, Form1.cell_id) )
+                else:
+                    self.logger.AppendText(" Same landscape (option 'type'): %s\n" % Form1.landscape_grassname_habmat )
             self.Refresh()
 
         #-----------------------------------------------------
@@ -826,6 +1008,32 @@ class Form1(wx.Panel):
         if event.GetId()==10:   #10==START
             Form1.experiment_info=datetime.now()
             time_before_everything=time.clock()
+            
+            # here we already know the species profile: lets load the profile specific maps
+            if Form1.UserBaseMap:
+                if Form1.species_profile == 'Habitat dependent':
+                    Form1.landscape_habmat_pid, Form1.landscape_habmat_areapix=pickup_one_landscape_sep(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form='type', previous_landscape=Form1.previous_landscape, sp_profile=Form1.species_profile, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+                    Form1.landscape_frag_pid = ''
+                elif Form1.species_profile == 'Frag. dependent' or Form1.species_profile == 'Core dependent':
+                    Form1.landscape_frag_pid, Form1.landscape_frag_AREApix=pickup_one_landscape_sep(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form='type', previous_landscape=Form1.previous_landscape, sp_profile=Form1.species_profile, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+                elif Form1.species_profile == 'Moderately generalist':
+                    Form1.landscape_frag_pid = ''
+                    Form1.landscape_dila01clean_pid, Form1.landscape_dila01clean_AREApix=pickup_one_landscape_sep(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form='type', previous_landscape=Form1.previous_landscape, sp_profile=Form1.species_profile, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+                elif Form1.species_profile == 'Highly generalist':
+                    Form1.landscape_frag_pid = ''
+                    Form1.landscape_dila02clean_pid, Form1.landscape_dila02clean_AREApix=pickup_one_landscape_sep(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form='type', previous_landscape=Form1.previous_landscape, sp_profile=Form1.species_profile, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+            else:
+                if Form1.species_profile == 'Habitat dependent':
+                    Form1.landscape_frag_pid = ''
+                    Form1.landscape_habmat_pid, Form1.landscape_habmat_areapix, Form1.landscape_hqmqlq_AREAqual=pickup_one_landscape_sep(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form='type', previous_landscape=Form1.previous_landscape, sp_profile=Form1.species_profile, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+                elif Form1.species_profile == 'Frag. dependent' or Form1.species_profile == 'Core dependent':
+                    Form1.landscape_frag_pid, Form1.landscape_frag_AREApix, Form1.landscape_frag_AREAqual=pickup_one_landscape_sep(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form='type', previous_landscape=Form1.previous_landscape, sp_profile=Form1.species_profile, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+                elif Form1.species_profile == 'Moderately generalist':
+                    Form1.landscape_dila01clean_pid, Form1.landscape_dila01clean_AREApix, Form1.landscape_dila01clean_AREAqual=pickup_one_landscape_sep(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form='type', previous_landscape=Form1.previous_landscape, sp_profile=Form1.species_profile, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+                    Form1.landscape_frag_pid = ''
+                elif Form1.species_profile == 'Highly generalist':
+                    Form1.landscape_dila02clean_pid, Form1.landscape_dila02clean_AREApix, Form1.landscape_dila02clean_AREAqual=pickup_one_landscape_sep(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form='type', previous_landscape=Form1.previous_landscape, sp_profile=Form1.species_profile, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)            
+                    Form1.landscape_frag_pid = ''
             
             for nlandscape in range(Form1.numberruns):
                 if nlandscape>=0:
@@ -844,7 +1052,9 @@ class Form1(wx.Panel):
                     self.logger.AppendText(".................................................\n")
                     self.logger.AppendText("[RUN %s] :::" % str(nruns+1))
                     time_starting = time.clock()
-        
+                    grass.run_command("g.message", message='Landscape: '+str(nlandscape+1)+'/'+str(Form1.numberruns)+
+                                      '; Run: '+str(nruns+1)+'/'+str(Form1.runsperlandscape))
+                    
                     #----------------------
                     # Initializing variables within a run
                     if Form1.UserBaseMap:
@@ -1064,7 +1274,16 @@ class Form1(wx.Panel):
                             #salvando o txt de output
                             os.chdir(Form1.defaultDIR)
                             os.chdir(Form1.outputDir) #mudando caminho para a pasta de saida
-                            organize_output(moment="ongoingstep", grassname_habmat=Form1.landscape_grassname_habmat, isdispersing=indiv_isdispersing, isfemale=indiv_isfemale, islive=indiv_islive, totaldistance=indiv_totaldistance, netdisplacement=indiv_netdisplacement, step_length=indiv_steplength, experiment_info=Form1.experiment_info, actualrun=nruns, actual_step=0, actual_movementcost=indiv_movementcost, timestep_waslive=indiv_islive_timestep_waslive, number_of_meetings=indiv_number_of_meetings, LOCI_start=indiv_LOCI_START, LOCI_end=indiv_LOCI, initpos=indiv_xy_initpos, xy=indiv_xy)
+                            if Form1.usegrid:
+                                landscape = Form1.cell_id
+                            else:
+                                landscape = str(nlandscape+1)
+                            organize_output_simple(moment="ongoingstep", output_prefix=Form1.output_prefix, 
+                                                   experiment_info=Form1.experiment_info, grassname_habmat=Form1.landscape_grassname_habmat, pland=pland, landscape=landscape, nlandscapes=Form1.numberruns, actualrun=nruns, runsperlandscape=Form1.runsperlandscape, actual_step=-1, timesteps=Form1.timesteps, 
+                                                   species_profile=Form1.species_profile, start_popsize=Form1.start_popsize, homerangesize=Form1.homerangesize, avg_movement_dist_meters=Form1.avg_movement_dist_meters, when_dispersing_distance_factor=Form1.when_dispersing_distance_factor,
+                                                   spatialresolution=Form1.spatialresolution, x_west=Form1.x_west, y_north=Form1.y_north,
+                                                   xy=indiv_xy)
+                            #organize_output(moment="ongoingstep", grassname_habmat=Form1.landscape_grassname_habmat, pland=pland, isdispersing=indiv_isdispersing, isfemale=indiv_isfemale, islive=indiv_islive, totaldistance=indiv_totaldistance, netdisplacement=indiv_netdisplacement, step_length=indiv_steplength, experiment_info=Form1.experiment_info, actualrun=nruns, actual_step=0, actual_movementcost=indiv_movementcost, timestep_waslive=indiv_islive_timestep_waslive, number_of_meetings=indiv_number_of_meetings, LOCI_start=indiv_LOCI_START, LOCI_end=indiv_LOCI, initpos=indiv_xy_initpos, xy=indiv_xy)
                         
                         
                         #actual_step_range=[0,1,2,3,4,5,6,7,8,9,14,19,24,29,39,49,74,99,124,149,174,199,249,299,349,399,449,499,549,599,649,699,749,799,849,899,949,999,1249,1499,1749,1999]
@@ -1076,7 +1295,8 @@ class Form1(wx.Panel):
                             if actual_step in actual_step_range:
                                 self.logger.AppendText(" %s" % (actual_step+1))
                                 # so para acompanhar, podemos tirar; acho que deixa um pouco mais lento (mas nao muito)
-                                grass.run_command("g.message", message='Step: '+str(actual_step+1))
+                                if Form1.output_store_ongoingsteps_landscape==1 or Form1.output_store_ongoingsteps_indiv==1:
+                                    grass.run_command("g.message", message='Step: '+str(actual_step+1))
                                 
                             #####################################    
                             # colocar no output o inicio, se for pra dar print no step
@@ -1086,7 +1306,7 @@ class Form1(wx.Panel):
                             if Form1.species_profile=='Random walk':
                                 indiv_xy, indiv_totaldistance, indiv_steplength, changed_quadrant=disperse_random_walk(Form1.landscape_matrix, indiv_xy, Form1.avg_movement_dist_meters, Form1.spatialresolution, indiv_totaldistance)
                             elif 'dependent' in Form1.species_profile or 'generalist' in Form1.species_profile:
-                                indiv_xy, indiv_totaldistance, indiv_steplength, changed_quadrant=disperse_habitat_dependent(Form1.landscape_habdist, Form1.landscape_frag_pid, indiv_xy, Form1.species_profile, indiv_isdispersing, indiv_totaldistance, Form1.avg_movement_dist_meters, Form1.spatialresolution, Form1.when_dispersing_distance_factor, indiv_movdirectionX, indiv_movdirectionY)
+                                indiv_xy, indiv_totaldistance, indiv_steplength, changed_quadrant=disperse_habitat_dependent(Form1.landscape_habdist, indiv_xy, Form1.species_profile, indiv_isdispersing, indiv_totaldistance, Form1.avg_movement_dist_meters, Form1.spatialresolution, Form1.when_dispersing_distance_factor, indiv_movdirectionX, indiv_movdirectionY, Form1.landscape_frag_pid)
                             #elif Form1.species_profile=='Habitat dependent' or :
                                 #indiv_xy, indiv_totaldistance, indiv_steplength, changed_quadrant=disperse_habitat_dependent(Form1.landscape_habdist, Form1.landscape_frag_pid, indiv_xy, Form1.species_profile, indiv_isdispersing, indiv_totaldistance, Form1.avg_movement_dist_meters, Form1.spatialresolution, Form1.when_dispersing_distance_factor, indiv_movdirectionX, indiv_movdirectionY)
                             #elif Form1.species_profile=='Frag. dependent' or Form1.species_profile=='Core dependent':
@@ -1163,7 +1383,7 @@ class Form1(wx.Panel):
                                 #plot 
                                 os.chdir(Form1.defaultDIR)
                                 os.chdir(Form1.outputDir)
-                                plot_walk(Form1.landscape_matrix, indiv_xy, aux_isdispersing=indiv_isdispersing, aux_islive=indiv_islive, nruns=nruns, 
+                                plot_walk(Form1.landscape_matrix, indiv_xy, aux_isdispersing=indiv_isdispersing, aux_islive=indiv_islive, nlandscape=nlandscape, nruns=nruns, 
                                           aux_isdispersingRESET=indiv_isdispersingRESET, timestep=actual_step, output_prefix=Form1.output_prefix, 
                                           UserBaseMap=Form1.UserBaseMap, indivpixels_isNOTlive=Form1.indivpixels_isNOTlive, 
                                           indivpixels_isdispersing=Form1.indivpixels_isdispersing, indivpixels_whenmoving=Form1.indivpixels_whenmoving)
@@ -1192,7 +1412,16 @@ class Form1(wx.Panel):
                                 #salvando o txt de output
                                 os.chdir(Form1.defaultDIR)
                                 os.chdir(Form1.outputDir) #mudando caminho para a pasta de saida
-                                organize_output(moment="ongoingstep", grassname_habmat=Form1.landscape_grassname_habmat, isdispersing=indiv_isdispersing, isfemale=indiv_isfemale, islive=indiv_islive, totaldistance=indiv_totaldistance, netdisplacement=indiv_netdisplacement, step_length=indiv_steplength, experiment_info=Form1.experiment_info, actualrun=nruns, actual_step=actual_step, actual_movementcost=indiv_movementcost, timestep_waslive=indiv_islive_timestep_waslive, number_of_meetings=indiv_number_of_meetings, LOCI_start=indiv_LOCI_START, LOCI_end=indiv_LOCI, initpos=indiv_xy_initpos, xy=indiv_xy)
+                                if Form1.usegrid:
+                                    landscape = Form1.cell_id
+                                else:
+                                    landscape = str(nlandscape+1)
+                                organize_output_simple(moment="ongoingstep", output_prefix=Form1.output_prefix, 
+                                                       experiment_info=Form1.experiment_info, grassname_habmat=Form1.landscape_grassname_habmat, pland=pland, landscape=landscape, nlandscapes=Form1.numberruns, actualrun=nruns, runsperlandscape=Form1.runsperlandscape, actual_step=actual_step, timesteps=Form1.timesteps, 
+                                                       species_profile=Form1.species_profile, start_popsize=Form1.start_popsize, homerangesize=Form1.homerangesize, avg_movement_dist_meters=Form1.avg_movement_dist_meters, when_dispersing_distance_factor=Form1.when_dispersing_distance_factor,
+                                                       spatialresolution=Form1.spatialresolution, x_west=Form1.x_west, y_north=Form1.y_north,
+                                                       xy=indiv_xy)                                
+                                #organize_output(moment="ongoingstep", grassname_habmat=Form1.landscape_grassname_habmat, pland=pland, isdispersing=indiv_isdispersing, isfemale=indiv_isfemale, islive=indiv_islive, totaldistance=indiv_totaldistance, netdisplacement=indiv_netdisplacement, step_length=indiv_steplength, experiment_info=Form1.experiment_info, actualrun=nruns, actual_step=actual_step, actual_movementcost=indiv_movementcost, timestep_waslive=indiv_islive_timestep_waslive, number_of_meetings=indiv_number_of_meetings, LOCI_start=indiv_LOCI_START, LOCI_end=indiv_LOCI, initpos=indiv_xy_initpos, xy=indiv_xy)
     
                         #END for actual_step in range(0,Form1.timesteps):    
                         ##-----------------------------------
@@ -1206,7 +1435,7 @@ class Form1(wx.Panel):
                         # salvando txt de output
                         os.chdir(Form1.defaultDIR)
                         os.chdir(Form1.outputDir) #mudando caminho para a pasta de saida
-                        organize_output(moment="summary_of_a_run", grassname_habmat=Form1.landscape_grassname_habmat, isdispersing=indiv_isdispersing, isfemale=indiv_isfemale, islive=indiv_islive, totaldistance=indiv_totaldistance, netdisplacement=indiv_netdisplacement, step_length=indiv_steplength, experiment_info=Form1.experiment_info, actualrun=nruns, actual_step=actual_step, actual_movementcost=indiv_movementcost, timestep_waslive=indiv_islive_timestep_waslive, number_of_meetings=indiv_number_of_meetings, LOCI_start=indiv_LOCI_START, LOCI_end=indiv_LOCI, initpos=indiv_xy_initpos, xy=indiv_xy)
+                        organize_output(moment="summary_of_a_run", grassname_habmat=Form1.landscape_grassname_habmat, pland=pland, isdispersing=indiv_isdispersing, isfemale=indiv_isfemale, islive=indiv_islive, totaldistance=indiv_totaldistance, netdisplacement=indiv_netdisplacement, step_length=indiv_steplength, experiment_info=Form1.experiment_info, actualrun=nruns, actual_step=actual_step, actual_movementcost=indiv_movementcost, timestep_waslive=indiv_islive_timestep_waslive, number_of_meetings=indiv_number_of_meetings, LOCI_start=indiv_LOCI_START, LOCI_end=indiv_LOCI, initpos=indiv_xy_initpos, xy=indiv_xy)
     
                         StartingPopsizeTXT='\n\nStarting Pop'+str(Form1.start_popsize)
                         self.logger.AppendText(StartingPopsizeTXT)
@@ -1242,54 +1471,76 @@ class Form1(wx.Panel):
                     d.Destroy() # finally destroy it when finished.
                 else: #RUN new simulation
                     self.logger.AppendText(" Picking up new landscape ... please wait\n")
+                       
                     
-                    # pickup_one_landscape
-                    os.chdir(Form1.defaultDIR)
-                    os.chdir(Form1.tempDir)
-                    if not (Form1.select_landscape == 'type' and Form1.landscape_grassname_habmat == Form1.previous_landscape):
-                        if Form1.UserBaseMap:
-                            Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist, Form1.landscape_habmat_pid, Form1.landscape_habmat_areapix, Form1.landscape_frag_pid, Form1.landscape_frag_AREApix, Form1.landscape_dila01clean_pid, Form1.landscape_dila01clean_AREApix, Form1.landscape_dila02clean_pid, Form1.landscape_dila02clean_AREApix=pickup_one_landscape(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
-                            rows = len(Form1.landscape_matrix)
-                            cols = len(Form1.landscape_matrix[0])
-                            Form1.landscape_hqmqlq_quality = [[1.0] * cols] * rows                        
+                    #pickuplandscape
+            
+                    re_image = 0
+                    if Form1.UserBaseMap:
+                        if Form1.usegrid:
+                            if not (Form1.previous_gridname == Form1.gridname):
+                                re_image = 1
+                                Form1.cell_index_list, Form1.cell_id_string, Form1.cell_x_col, Form1.cell_y_row = get_landscape_centers(mapa=Form1.gridname, cols=Form1.gridcols)
+                                Form1.previous_gridname=Form1.gridname
+                            if not (Form1.select_cell == 'type' and Form1.cell_index == Form1.previous_index):
+                                re_image = 1
+                                Form1.cell_index, Form1.cell_id, Form1.x_center, Form1.y_center = pickup_one_cell(Form1.cell_index_list, Form1.cell_id_string, Form1.cell_x_col, Form1.cell_y_row, select_form=Form1.select_cell, previous_index=Form1.previous_index)
+                                Form1.previous_index = Form1.cell_index
+                                Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist=pickup_one_landscape_sep(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, usegrid=Form1.usegrid, x_col=Form1.x_center, y_row=Form1.y_center, dims=Form1.landscape_dims, exportPNG=Form1.exportPNG)
+                                rows = len(Form1.landscape_matrix)
+                                cols = len(Form1.landscape_matrix[0])
+                                Form1.landscape_hqmqlq_quality = [[1.0] * cols] * rows                                        
                         else:
-                            Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist,Form1.landscape_habmat_pid,Form1.landscape_habmat_areapix,Form1.landscape_hqmqlq_quality,Form1.landscape_hqmqlq_AREAqual,Form1.landscape_frag_pid,Form1.landscape_frag_AREApix,Form1.landscape_frag_AREAqual,Form1.landscape_dila01clean_pid,Form1.landscape_dila01clean_AREApix,Form1.landscape_dila01clean_AREAqual,Form1.landscape_dila02clean_pid,Form1.landscape_dila02clean_AREApix,Form1.landscape_dila02clean_AREAqual=pickup_one_landscape(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
-                    
+                            if not (Form1.select_landscape == 'type' and Form1.landscape_grassname_habmat == Form1.previous_landscape):
+                                re_image = 1
+                                #Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist, Form1.landscape_habmat_pid, Form1.landscape_habmat_areapix, Form1.landscape_frag_pid, Form1.landscape_frag_AREApix, Form1.landscape_dila01clean_pid, Form1.landscape_dila01clean_AREApix, Form1.landscape_dila02clean_pid, Form1.landscape_dila02clean_AREApix=pickup_one_landscape(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+                                Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist=pickup_one_landscape_sep(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+                                rows = len(Form1.landscape_matrix)
+                                cols = len(Form1.landscape_matrix[0])
+                                Form1.landscape_hqmqlq_quality = [[1.0] * cols] * rows                
+                    else:
+                        if not (Form1.select_landscape == 'type' and Form1.landscape_grassname_habmat == Form1.previous_landscape):
+                            re_image = 1
+                            #Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist, Form1.landscape_habmat_pid, Form1.landscape_habmat_areapix,Form1.landscape_hqmqlq_quality,Form1.landscape_hqmqlq_AREAqual,Form1.landscape_frag_pid,Form1.landscape_frag_AREApix,Form1.landscape_frag_AREAqual,Form1.landscape_dila01clean_pid,Form1.landscape_dila01clean_AREApix,Form1.landscape_dila01clean_AREAqual,Form1.landscape_dila02clean_pid,Form1.landscape_dila02clean_AREApix,Form1.landscape_dila02clean_AREAqual=pickup_one_landscape(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+                            Form1.landscape_head, Form1.landscape_matrix, Form1.landscape_grassname_habmat, Form1.landscape_habdist, Form1.landscape_hqmqlq_quality=pickup_one_landscape_sep(Form1.defaultDIR, Form1.inputDir, Form1.tempDir, select_form=Form1.select_landscape, previous_landscape=Form1.previous_landscape, userbasemap=Form1.UserBaseMap, exportPNG=Form1.exportPNG)
+                            
+                    if re_image == 1:
                         Form1.previous_landscape = Form1.landscape_grassname_habmat
                         
                         # Map information - in principle res_x and res_y are equal - we can ignore res_y
-                        Form1.mapdims, Form1.x_west, Form1.x_east, Form1.y_south, Form1.y_north, Form1.spatialresolution, res_y = map_info(landscape=Form1.landscape_grassname_habmat)
-                    
-                        # This lines are run in the beginning of each simulation
-                        #if Form1.UserBaseMap:
-                            #pland, forest=getForest_habmat(landscape_matrix = Form1.landscape_matrix)
-                        #else:
-                            #pland, forest=getForest(landscape_matrix = Form1.landscape_matrix)
-                            
-                        #if Form1.startpop_always_K:
-                            #Form1.start_popsize=estimate_start_popsize(Form1.landscape_matrix, pland, Form1.homerangesize, Form1.spatialresolution)                    
-                    
-                        imageFile=Form1.background_filename[0]
-                
+                        Form1.mapdims, Form1.x_west, Form1.x_east, Form1.y_south, Form1.y_north, Form1.spatialresolution, res_y = map_info(landscape=Form1.landscape_grassname_habmat, usegrid=Form1.usegrid, x_center=Form1.x_center, y_center=Form1.y_center, dims=Form1.landscape_dims)
+               
+                        # background
+                        os.chdir(Form1.defaultDIR)
+                        os.chdir(Form1.tempDir) 
+                        imageFile=Form1.background_filename_start[0]
+        
                         im = Image.new('P', (len(Form1.landscape_matrix),len(Form1.landscape_matrix[0])))  # 'P' for palettized
                         data = sum(Form1.landscape_matrix, [])  # flatten data
                         im.putdata(data)
                         pal = color_pallete(userbase = Form1.UserBaseMap)
                         im.putpalette(pal)
-                        im.save(Form1.background_filename[0])
-                        
-                        imageFile=Form1.background_filename[0]
+                        im.save(Form1.background_filename_start[0])
+                
+                        imageFile=Form1.background_filename_start[0]
+                        #if Form1.plotmovements==1:
                         im1 = Image.open(imageFile)
                         jpg1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).Scale(Form1.showlandscape_size,Form1.showlandscape_size).ConvertToBitmap()
                         wx.StaticBitmap(self, -1, jpg1, (450,30), (jpg1.GetWidth(), jpg1.GetHeight()), style=wx.SIMPLE_BORDER)
-                    
+            
                         Form1.background_filename=Form1.background_filename_start
-
-                        self.logger.AppendText(" New landscape: %s\n" % Form1.landscape_grassname_habmat )
+                
+                        if Form1.usegrid:
+                            self.logger.AppendText(" New: landscape: %s, ID: %s\n" % (Form1.landscape_grassname_habmat, Form1.cell_id) )
+                        else:
+                            self.logger.AppendText(" New landscape: %s\n" % Form1.landscape_grassname_habmat )
                     else:
-                        self.logger.AppendText(" Same landscape (option 'type'): %s\n" % Form1.landscape_grassname_habmat ) 
-                    
+                        if Form1.usegrid:
+                            self.logger.AppendText(" Same: landscape: %s, ID: %s\n" % (Form1.landscape_grassname_habmat, Form1.cell_id) )
+                        else:
+                            self.logger.AppendText(" Same landscape (option 'type'): %s\n" % Form1.landscape_grassname_habmat )
                     self.Refresh()
+
                         
                     if Form1.changehomerangesize==0: #not change
                         pass
@@ -1399,7 +1650,7 @@ class Form1(wx.Panel):
             else:
                 Form1.avg_movement_dist_meters=float(event.GetString())
                 
-        if event.GetId()==81: #81=when_dispersing_distance_factor
+        if event.GetId()==81: #81=Form1.when_dispersing_distance_factor
             not_float=0
             try: 
                 float(event.GetString())
@@ -1411,10 +1662,21 @@ class Form1(wx.Panel):
             else:
                 Form1.when_dispersing_distance_factor=float(event.GetString())
          
-        if event.GetId()==97: #81=when_dispersing_distance_factor
+        if event.GetId()==97: #97=previous_landscape
             Form1.previous_landscape = event.GetString()
             if not (Form1.previous_landscape in Form1.landscapeList):
-                self.logger.AppendText('Type a valid landscape name! This one is not inside GRASS GIS DataBase!')     
+                self.logger.AppendText('Type a valid landscape name! This one is not inside GRASS GIS DataBase!')
+        
+        elif event.GetId()==99: #99=Form1.gridcols
+            Form1.gridcols = event.GetString()
+            self.logger.AppendText('Grid column names: %s\n' % event.GetString())
+            # colocar algo para listar as colunas do shape e ver se essas estao entre elas, e indicar qual nao esta
+                
+        if event.GetId()==122: #122=Form1.previous_index
+            previous_id = event.GetString()
+            if not (previous_id in Form1.cell_id_string):
+                self.logger.AppendText('Type a valid cell name! This one is not a cell of the shape grid!')        
+            Form1.previous_index=int(Form1.cell_id_string.index(previous_id))
 
                 
     def EvtChar(self, event):
@@ -1505,7 +1767,19 @@ if __name__ == "__main__":
                 UserBaseMap = True
             break
         else:
-            print 'You should type y/Y or n/N only!' 
+            print 'You should type y/Y or n/N only!'
+   
+    if UserBaseMap == True:
+        while 1:
+            grid = raw_input("Do you want to use a grid to define landscapes? (y/n) ")
+            if grid == 'Y' or grid == 'y' or grid == 'N' or grid == 'n':
+                if grid == 'Y' or grid == 'y':
+                    UseGrid = True
+                else:
+                    UseGrid = False
+                break
+            else:   
+                print 'You should type y/Y or n/N only!'    
     
     app = wx.PySimpleApp()
     frame = wx.Frame(None, -1, "BioDIM v. 1.05b.1 - Biologically scalled DIspersal Model - LANDSCAPE GENETIC EMBEDDED - LeLab/LEEC - Mar2016", pos=(0,0), size=(1000,700))

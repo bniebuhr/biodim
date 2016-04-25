@@ -1,0 +1,95 @@
+#---------------------------------------------------------------------------
+#
+# BioDIM - Biologically scaled dispersal model
+#
+# How to:
+# Instructions for downloading, installing and setting up GIS environment 
+#  to run BioDIM.
+#
+# LEEC/UNESP - Spatial Ecology and Conservation Lab
+#
+# Milton C. Ribeiro - mcr@rc.unesp.br
+# Bernardo Niebuhr - bernardo_brandaum@yahoo.com.br
+# John W. Ribeiro - jw.ribeiro.rc@gmail.com
+#
+#---------------------------------------------------------------------------
+
+
+#---------------------------------------------------------------------------
+#
+# How to install software needed
+#
+#---------------------------------------------------------------------------
+
+# On Windows
+
+# 1) Download OSGeo4W installer from https://trac.osgeo.org/osgeo4w/ 
+# [if the link is broken, just google "OSGeo4W"]
+
+# 2) Install OSGeo4W. Select the option Advanced Install. There will be a list of
+# software to be installed. Select, at least: 
+# - gdal
+# - python-core, python-help, python-tcltk, python-tools
+# - grass 7.0.2
+# - qgis
+# - matplotlib, python-numpy, python-pil, python-scipy
+
+# OBS: make sure your numpy version is 1.8.0 or higher. To do so:
+# i) open GRASS GIS 7.0.2;
+# ii) on the command line, type "python" to enter python environment;
+# iii) type the commands: 
+import numpy as np
+np.version.version
+# If your version in lower, please reinstall python-numpy using OSGeo4W installer.
+
+# On Ubuntu
+
+# 1) Install GRASS GIS 7.0.4 using apt-get. In the terminal, you may type the lines:
+sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
+sudo apt-get update
+sudo apt-get install grass
+
+#---------------------------------------------------------------------------
+#
+# How to run BioDIM using the simulated landscape GRASS GIS DataBase
+#
+#---------------------------------------------------------------------------
+
+#---------------------------------------------------------------------------
+# Downloading BioDIM
+
+# 1) Download all the biodim project from GitHub from
+# https://github.com/bniebuhr/biodim
+# or clone it to your local GitHub Desktop:
+git clone https://github.com/bniebuhr/biodim.git
+
+#---------------------------------------------------------------------------
+# Openning GRASS GIS
+
+# 2) Open GRASS GIS 7.0.2 (7.0.4 on Ubuntu)
+
+# 3) On the field "Select GRASS GIS database directory", select the directory
+# "_Sim_GeoDB_GRASS_29ls_m_ha", where the GRASS project (NewLocation) is located
+
+# 4) Select "NewLocation" as GRASS location, and any mapset (it is not important), 
+# and click "Start GRASS session"
+
+#---------------------------------------------------------------------------
+# Running BioDIM
+
+# 5) Change the working directory to the partition and directory where BioDIM files are located,
+(To run BioDIM, you shall always be in the directory "py", where all the code is organized):
+# Example on Windows:
+C:
+cd "C:\Users\LEEC B\Documents\GitHub\biodim\py"
+
+# Example on Ubuntu:
+cd /home/leecb/Github/biodim/py/
+
+# 6) Run BioDIM:
+python biodim_v105b1.py
+
+# 7) Answer yes (y) to the question "Are you going to use the Simulated GRASS Geo DataBase?"
+
+
+ 
