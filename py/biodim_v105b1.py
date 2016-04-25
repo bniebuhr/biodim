@@ -533,14 +533,20 @@ class Form1(wx.Panel):
         Form1.LOCI_gene_exchange_rate=0.1
 
         #HOME RANGE Informations -----------------------------
-        Form1.homerangesize=10
-        Form1.changehomerangesize=0 #0=not change; 1=uniform distr; 2=normaldist
+        Form1.changehomerangesize=1 #0=not change; 1=uniform distr; 2=normaldist
         ####--- if changehomerangesize=1
         ####............ P1=min; P2=max
         ####--- if changehomerangesize=2
         ####............ P1=mean; P2=sd
-        Form1.changehomerangesize_P1=20
-        Form1.changehomerangesize_P2=10
+        Form1.changehomerangesize_P1=5
+        Form1.changehomerangesize_P2=30
+        
+        if Form1.changehomerangesize==0: #not change
+            Form1.homerangesize=15
+        if Form1.changehomerangesize==1: #uniform distribution
+            Form1.homerangesize=random.uniform(a=Form1.changehomerangesize_P1,b=Form1.changehomerangesize_P2)
+        if Form1.changehomerangesize==2: #normal distribution
+            Form1.homerangesize=random.normalvariate(mu=Form1.changehomerangesize_P1,sigma=Form1.changehomerangesize_P2)                                
         #(END) HOME RANGE Informations -----------------------------
         
         # Plot walk settings
