@@ -171,19 +171,20 @@ def organize_output_simple(moment, output_prefix,
             
     if moment=="ongoingstep":
         if Form1.output_store_ongoingsteps_indiv==1:
-            output_filename_indiv=output_prefix+'_'+grassname_habmat+'_'+landscape+"_indiv_step"+".txt"
+            #output_filename_indiv=output_prefix+'_'+grassname_habmat+'_'+landscape+"_indiv_step"+".txt"
+            output_filename_indiv=output_prefix+"_indiv_step.txt"
             file_output_indiv=open(output_filename_indiv,"a")
             xy_real = rowscols2xy(xy, spatialresolution=spatialresolution, x_west=x_west, y_north=y_north)
             if actual_step==-1 and actualrun==0:
-                file_output_indiv.write('actuallandscape;grassname_habmat;actual_step;ind;x;y;\n')
+                file_output_indiv.write('actuallandscape\tgrassname_habmat\tactual_step\tind\tx\ty\n')
             
             for indiv in range(len(xy)):
-                file_output_indiv.write('%s;' % landscape)
-                file_output_indiv.write('%s;' % grassname_habmat)
-                file_output_indiv.write('%s;' % str(actual_step+1))
-                file_output_indiv.write('%s;' % str(indiv+1))
-                file_output_indiv.write('%s;' % str(xy_real[indiv][0]))
-                file_output_indiv.write('%s;' % str(xy_real[indiv][1]))
+                file_output_indiv.write('%s\t' % landscape)
+                file_output_indiv.write('%s\t' % grassname_habmat)
+                file_output_indiv.write('%s\t' % str(actual_step+1))
+                file_output_indiv.write('%s\t' % str(indiv+1))
+                file_output_indiv.write('%s\t' % str(xy_real[indiv][0]))
+                file_output_indiv.write('%s' % str(xy_real[indiv][1]))
                 file_output_indiv.write('\n')
             file_output_indiv.close()    
 
@@ -1788,7 +1789,7 @@ if __name__ == "__main__":
                 print 'You should type y/Y or n/N only!'    
     
     app = wx.PySimpleApp()
-    frame = wx.Frame(None, -1, "BioDIM v. 1.05b.1 - Biologically scalled DIspersal Model - LANDSCAPE GENETIC EMBEDDED - LeLab/LEEC - Mar2016", pos=(0,0), size=(1000,700))
+    frame = wx.Frame(None, -1, "BioDIM v. 1.05b.1 - Biologically scaled DIspersal Model - LANDSCAPE GENETIC EMBEDDED - LeLab/LEEC - Mar2016", pos=(0,0), size=(1000,700))
     Form1(frame,-1)
     frame.Show(1)
     
