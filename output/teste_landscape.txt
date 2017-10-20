@@ -1,0 +1,4 @@
+experiment_info;actualrun;nruns;grassname_habmat;PLAND;CONFIG;HABQUAL;species_profile;include_quality;start_popsize;timesteps;homerangesize;avgsteplength;dispfactor;isdispersing;isfemale;islive;totaldistance;netdisplacement;actual_movementcost;timestep_waslive;number_of_meetings
+2016-05-16 10:06:21.586219;1;1;simulation_000017_p067_h049_HABMAT;067;049;50.0;Habitat dependent;HabitatQuality_YES;1054;200;15.0;200.0;5.0;13;529;1038;1119940.47;101539.63;4116.55726858;209262;6177
+experiment_info;actualrun;nruns;grassname_habmat;PLAND;CONFIG;HABQUAL;species_profile;include_quality;start_popsize;timesteps;homerangesize;avgsteplength;dispfactor;isdispersing;isfemale;islive;totaldistance;netdisplacement;actual_movementcost;timestep_waslive;number_of_meetings
+2016-05-16 10:09:57.554103;1;1;simulation_000019_p036_h066_HABMAT;036;066;20.0;Habitat dependent;HabitatQuality_YES;567;20;15.0;200.0;5.0;25;282;566;73001.3;28790.38;5916.14454941;11328;231

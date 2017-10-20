@@ -70,3 +70,32 @@ python biodim_v105b1.py
 python biodim_v105b1.py
 python biodim_v105b1.py
 exit
+cd Github/biodim/py/
+python biodim_v105b1.py 
+exit
+cd Github/
+ls
+cd biodim/
+ls
+cd py/
+python biodim_v105b1.py 
+exit
+r.info map=simulation_000001_p029_h059_HABMAT@MS_HABMAT
+python
+exit
+python
+exit
+cd Github/LS_CORRIDORS/_LS_Corridors_v1_0_stable/
+python LS_corridors_v1_0.py 
+python LS_corridors_v1_0.py 
+exit
+cd Github/biodim/py
+ls
+python biodim_v105b1.py 
+exit
+cd Github/biodim/py/
+ls
+python biodim_v105b1.py 
+python biodim_v105b1.py 
+exit
+exit

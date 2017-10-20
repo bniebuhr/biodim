@@ -1,5 +1,5 @@
 test -r ~/.alias && . ~/.alias
-PS1='GRASS 7.0.4RC1 (NewLocation):\w > '
+PS1='GRASS 7.0.4 (NewLocation):\w > '
 grass_prompt() {
 	LOCATION="`g.gisenv get=GISDBASE,LOCATION_NAME,MAPSET separator='/'`"
 	if test -d "$LOCATION/grid3/G3D_MASK" && test -f "$LOCATION/cell/MASK" ; then
@@ -11,7 +11,7 @@ grass_prompt() {
 	fi
 }
 PROMPT_COMMAND=grass_prompt
-export GRASS_VERSION=7.0.4RC1
+export GRASS_VERSION=7.0.4
 export GRASS_GNUPLOT="gnuplot -persist"
 export GRASS_PYTHON=python
 export GRASS_ADDON_BASE=/home/leecb/.grass7/addons

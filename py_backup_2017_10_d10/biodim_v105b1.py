@@ -16,7 +16,6 @@
 """
 #---------------------------------------------------------------------------------------
 
-# Import modules
 import grass.script as grass
 from PIL import Image
 import wx

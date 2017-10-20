@@ -1,0 +1,5 @@
+COMMAND: v.in.ascii input="-" output="points" format="point" separator=";" text="doublequote" skip=1 columns="landscape varchar(10), name varchar(40), temp int, ind int, x double precision, y double precision" x=5 y=6 z=0 cat=0
+GISDBASE: /home/leecb/Github/biodim/_Sim_GeoDB_GRASS_29ls_m_ha
+LOCATION: NewLocation MAPSET: MS_HABMAT USER: leecb DATE: Wed May 18 13:26:50 2016
+HEADER: (1 lines)
+actuallandscape;grassname_habmat;actual_step;ind;x;y
