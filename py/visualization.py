@@ -12,8 +12,16 @@
 
 import os
 import random
+import numpy as np
 from PIL import Image
 from color_pallete import color_pallete 
+
+# how to plot a numpy array map as image
+#from scipy.misc import imshow
+#imshow(data) 
+#or
+#from scipy.misc import toimage
+#toimage(data).show()
 
 #---------------------------------------
 def plot_walk(landscape_matrix, indiv_xy, aux_isdispersing, aux_islive, nlandscape, nruns, aux_isdispersingRESET, timestep, output_prefix, UserBaseMap, indivpixels_isNOTlive, indivpixels_isdispersing, indivpixels_whenmoving):
@@ -64,7 +72,9 @@ def plot_walk(landscape_matrix, indiv_xy, aux_isdispersing, aux_islive, nlandsca
                 #landscape_matrix_temp[xp][yp]=random.sample(range(10,255),1 )
     
     im = Image.new('P', (len(landscape_matrix),len(landscape_matrix)))  # 'P' for palettized
-    data = sum(landscape_matrix_temp, [])  # flatten data
+    #data = sum(landscape_matrix_temp, [])  # flatten data
+    a = np.array(landscape_matrix_temp)
+    data = a.flatten()    
     im.putdata(data)
 
     pal = color_pallete(userbase = UserBaseMap)

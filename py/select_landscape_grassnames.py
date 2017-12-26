@@ -1,6 +1,7 @@
 import random
 import re
 import os
+import grass.script as grass
 
 def select_landscape_grassnames(select_form = 'random', previous_landscape = ''):
     '''This part read HABMAT file list and return the grassname
@@ -260,3 +261,94 @@ def select_landscape_grassnames_userbase(select_form = 'random', previous_landsc
             landscape_grassname_dila02clean_AREApix=i.replace("\n","")
     
     return landscape_grassname_habmat, landscape_grassname_habdist, landscape_grassname_habmat_pid, landscape_grassname_habmat_areapix, landscape_grassname_frag_pid, landscape_grassname_frag_AREApix, landscape_grassname_dila01clean_pid, landscape_grassname_dila01clean_AREApix, landscape_grassname_dila02clean_pid, landscape_grassname_dila02clean_AREApix
+
+
+def list_landscapes_habitat(use_random_landscapes = True, habmat_pattern = '*HABMAT'):
+    '''
+    New function: this function returns the list of landscapes in GRASS database locations
+    
+    Input:
+    use_random_landscapes: if True, seach for maps in the GRASS database of random landscapes; otherwise, use real landscapes
+    '''
+    
+    # If the user is going to use the database of random landscapes
+    if use_random_landscapes:
+        mapset_habmat = 'MS_HABMAT'
+    # Or, if the user is going to use read landscapes
+    else:
+        # Assessing the name of the current mapset
+        mapset_habmat = grass.read_command('g.mapset', flags = 'p').replace('\n','').replace('\r','')
+        
+    # List of maps of habitat
+    list_binary_maps = grass.list_grouped('rast', pattern = habmat_pattern) [mapset_habmat]
+    
+    return list_binary_maps
+
+
+def list_landscape_variables(use_random_landscapes = True, variables = []):
+    
+    '''
+    New function: this function returns the list of landscapes in GRASS database locations
+    
+    Input:
+    use_random_landscapes: if True, seach for maps in the GRASS database of random landscapes; otherwise, use real landscapes
+    variables: variables to be registered. Options: 'edge_dist', 'pid', 'patch_area', 'fid', 'frag_area', 'cross1_pid', 'cross1_patch_area', 'cross2_pid', 'cross2_patch_area'
+    '''
+        
+    # Lists of landscape variable names
+    list_names = {}
+    
+    # Possible variables
+    variables_options = ['edge_dist', 'pid', 'patch_area', 'fid', 'frag_area', 
+                         'cross1_pid', 'cross1_patch_area', 'cross2_pid', 'cross2_patch_area']
+    
+    # Correspondent possible mapsets and possible patterns
+    
+    # If random maps will be used
+    if use_random_landscapes:
+        # Possible mapsets
+        mapset_names = ['MS_HABMAT_DIST', 'MS_HABMAT_PID', 'MS_HABMAT_AREA', 
+                        'MS_HABMAT_FRAG_PID', 'MS_HABMAT_FRAG_AREA',
+                        'MS_HABMAT_DILA01_PID', 'MS_HABMAT_DILA01_AREA',
+                        'MS_HABMAT_DILA02_PID', 'MS_HABMAT_DILA02_AREA']
+        
+        # Possible patterns
+        possible_patterns = ['*DIST', '*PID', '*grassclump_AreaHA', '*FRAG_PID', '*FRAG_AreaHA',
+                             '*dila01_clean_PID', '*dila01_clean_AreaHA', '*dila02_clean_AreaHA', '*dila02_clean_AreaHA']
+    # update possibilities of quality etc for BioDIM birds
+    
+    # If real maps will be used
+    else: 
+        # Assessing the name of the current mapset - this may be used within the metrics functions
+        current_mapset = grass.read_command('g.mapset', flags = 'p').replace('\n','').replace('\r','')        
+        
+        # Possible mapsets
+        mapset_names = [current_mapset] * len(variables)
+        
+        # Possible patterns
+        # complete later! see patterns from LSMetrics
+    
+    # For each variable
+    for i in (variables):
+        
+        # If the variable is one of the possible ones
+        if i in variables_options:
+            
+            # Get index of the variable i in the list of variable options
+            index = variables_options.index(i)
+            # Define the list of map names as a dictionary entry
+            list_names[i] = grass.list_grouped('rast', pattern = possible_patterns[index]) [mapset_names[index]]
+            
+            # Check if the list has at least one map; otherwise there may be a problem
+            if len(list_names[i]) == 0:
+                raise Exception('There are no maps with the pattern '+possible_patterns[index]+' in the mapset '+mapset_names[index]+'! Please check it.')
+            
+        # If the variable in another, gives a warning
+        else:
+            raise Exception('There is some issue with maps related to variable '+i+'! Please check it.')
+        
+    return list_names   
+        
+    
+
+

@@ -19,3 +19,4 @@ def estimate_start_popsize(landscape_matrix, pland, homerangesize, spatialresolu
     tmp_starting_popsize=int(pland_0_1*LandscapePixels*PixelAreaHA/homerangesize)+1
     
     return tmp_starting_popsize
+

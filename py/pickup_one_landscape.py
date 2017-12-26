@@ -1,4 +1,5 @@
 import grass.script as grass
+from grass.script import array as garray
 import platform
 
 from select_landscape_grassnames import *
@@ -234,3 +235,8 @@ def get_landscape_centers(mapa, cols):
     
     #return index, cat, ID, x_col, y_row
     return index, ID, x_col, y_row
+
+        
+    
+
+

@@ -1,4 +1,5 @@
 import random
+import numpy as np
 from check_landscaperange import check_landscaperange
 
 def get_safetyness_mortality(tab_in, species_profile, distMeters, spatialresolution):
@@ -103,3 +104,88 @@ def kill_individual_new(tab_mortality, sp_profile, distfromedge, spatialres):
         continuealive=1
 
     return continuealive
+
+def mortality_general(individuals_alive, include_mortality = True, 
+                      mortality_rate = [0.05], mortality_option = 'constant',
+                      individuals_age = [], age_classes = [], habitat_types = []):
+    '''
+    This function calculates the mortality rate, for a given species profile and position in the landscape,
+    and randomly defines if an individual will keep alive or die, given this mortality rate.
+    
+    Input:
+    individuals_alive: numpy array with int values; array of values indicating whether each individual is alive (1) or dead (0).
+    include_mortality: (True/False) logical; if True, mortality is considered; if False, individuals do not die.
+    mortality_rate: list with float values; single value if mortality is constant, or several values for different habitats/matrices or different age classes, for instance.
+    ### variation with distance from edge: to be implemented
+    mortality_option: string; the way mortality will be considered. It may be 'constant', 'age_class', 'habitat_type', or other.
+    individuals_age: numpy array with floats, representing individual age; it is only taken into account if mortality_option == 'age_class'.
+    age_classes: array with floats, representing the above age of each age class; it is only taken into account if mortality_option == 'age_class'.
+        It makes sense if the age of the last class is the maximum age for agents (you can choose a large number if this is not relevant).
+        E.g.: age_classes = [1,2,4,10] indicates the age classes 0-1, 1-2, 2-4, 4-10, 10 being the maximum age possible
+        (otherwise the mortality function does not work for these individuals).
+    habitat_types: array with floats, representing the above age of each habitat type in the landscape; 
+        it is only taken into account if mortality_option == 'habitat_type'.
+    
+    Output:
+    A numpy array indicating whether individuals died (1) or not (0 - may be still alive or have died before).
+    '''
+    
+    if any([(i > 1 or i < 0) for i in mortality_rate]):
+        raise ValueError('Mortality rate should be within the interval [0,1]!')
+    
+    # If mortality is to be included in the simulations, calculate it
+    if include_mortality:
+        
+        # If mortality rate is contant for individuals and locations, calculate it
+        if mortality_option == 'constant':
+            
+            # If mortality rate is constant but there is more than one value in the list of mortality rates, raises error
+            # We could also only warn the user and get the first value
+            if len(mortality_rate) > 1:
+                raise ValueError('You set mortality to be constant, but there is more than one mortality rate value. Please check and retry.')
+            # If mortality rate is constant and there is only one value for it, carry on
+            else:
+                # Checks if random values in the interval [0,1) are smaller than mortality rate, and return 1 (0) if it is (not)
+                return np.where(np.random.random(individuals_alive.shape) < mortality_rate[0], 1, 0)
+        
+        # If mortality rate depend on individual age class, calculate it
+        elif mortality_option == 'age_class':
+            
+            # If mortality rate depends on age class but the number of mortality values is different 
+            # from number of age classes, raise error
+            if len(mortality_rate) != len(age_classes):
+                raise ValueError('You set mortality to be age dependent, but the length in number of \
+                mortality rate values and age classes differ. Please check and retry.')
+            
+            # If mortality rate depends on age class but the number of individuals is different 
+            # in the list of individuals alive and the list of individual ages, raise error
+            elif individuals_alive.shape != individuals_age.shape:
+                raise ValueError('You set mortality to be age dependent, but the number of individuals must \
+                be the same in the list of individuals alive and individual ages. Please check and retry.')
+            
+            # If mortality rate is age dependent and their values as ok, carry on
+            else:
+                # Create a first array of probability of dying with all values = 0
+                prob_die = np.zeros(individuals_alive.shape)
+                # For each age class 
+                for i in range(len(age_classes)):
+                    # Define the minimum age of the age class (0 for the first, the previous maximum for the following ones)
+                    age_below = 0 if i == 0 else age_classes[(i-1)]
+                    # When the age of individuals is within the age class, put the mortality rate for this age class 
+                    # in the array of probability of dying
+                    np.copyto(prob_die, mortality_rate[i], where=(individuals_age >= age_below) & (individuals_age < age_classes[i]))
+                
+                # Finally, generate random numbers and check whether individuals die or not, after accounting for
+                # age class
+                return np.where(np.random.random(individuals_alive.shape) < prob_die, 1, 0)                
+                
+        # Other situations
+        else:
+            # Implement dist edges and habitat types later, when necessary
+            raise ValueError('Mortality option must be "constant" or "age_class".')
+                  
+    # If mortality is not to be included in the simulations, return a numpy array with zeros for all individuals (no mortality)
+    else:
+        return np.zeros(individuals_alive.shape, dtype = np.int8)
+
+

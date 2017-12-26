@@ -282,3 +282,9 @@ def disperse_random_walk(landscape_matrix, indiv_xy, avg_movement_dist_meters, s
     
     #return modified_indiv_xy, indiv_totaldistance, step_length.tolist(), changed_quadrant
     return modified_indiv_xy, indiv_totaldistance, step_length, changed_quadrant
+
+
+    
+    
+    
+    

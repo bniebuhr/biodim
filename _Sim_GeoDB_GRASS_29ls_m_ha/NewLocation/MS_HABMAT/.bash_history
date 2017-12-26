@@ -99,3 +99,73 @@ python biodim_v105b1.py
 python biodim_v105b1.py 
 exit
 exit
+cd Github/biodim/py
+python biodim_v105b1.py 
+python
+exit
+g.list rast
+python 
+clear
+python
+python 
+python 
+python 
+python 
+exit
+python
+python
+exit
+python 
+exit
+    
+python
+import os
+python
+python
+python
+python
+python
+python 
+python 
+python
+python
+python
+python
+from timeit import timeit
+#from teste_velo import init
+timeit(stmt="init()", setup = 'from teste_velo import init', number=1000)
+#from teste_velo import init
+from teste_velo import init
+python
+exit
+exit
+python
+python
+r.info map=simulation_000001_p029_h059_HABMAT_grassclump_AreaHA@MS_HABMAT_AREA
+python
+python
+python
+python
+python
+python
+python
+python
+python
+loaded_var_names, var_maps = pickup_landscape_variables(habitat_map_name = landscape_name, variables = var, 
+                                                        list_variable_maps = landscape_vars, 
+                                                        variable_types = var_types, variable_mapsets = var_mapsets,
+                                                        null = 0, null_nan = False,
+                                                        exportPNG = True)
+print loaded_var_names
+print var_maps
+python
+clear
+python
+python
+python
+exit
+python 
+exi
+exit
+exit
+exit

@@ -1,0 +1,6 @@
+# BioDIM setup file
+
+par1=10
+par2=20.0
+par3=False
+par4=None
